@@ -70,10 +70,6 @@ namespace CubeCity.Models
 
         public PooledArraySegment(Pooled<T[]> array, int length)
         {
-            //System.Numerics.Vector.LessThanOrEqualAny();
-
-            // System.Numerics.Vector.
-            
             Length = length;
             _pooledArray = array;
         }
@@ -100,12 +96,10 @@ namespace CubeCity.Models
 
     public readonly struct ChunkInfo
     {
-        public SimpleMesh Mesh { get; }
         public Pooled<ushort[,,]> Blocks { get; }
 
-        public ChunkInfo(SimpleMesh mesh, Pooled<ushort[,,]> blocks)
+        public ChunkInfo(Pooled<ushort[,,]> blocks)
         {
-            Mesh = mesh;
             Blocks = blocks;
         }
     }

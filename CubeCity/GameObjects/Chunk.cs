@@ -41,8 +41,6 @@ namespace CubeCity.GameObjects
 
     public class ChunkDrawData : IDisposable
     {
-        public SimpleMesh Mesh { get; private set; }
-
         public ushort[,,] Blocks
         {
             get
@@ -59,14 +57,13 @@ namespace CubeCity.GameObjects
         private readonly IndexBuffer _indexBuffer;
         private readonly VertexBuffer _vertexBuffer;
 
-        public ChunkDrawData(GraphicsDevice graphicsDevice, SimpleMesh mesh, Pooled<ushort[,,]> blocks,
+        public ChunkDrawData(GraphicsDevice graphicsDevice, Pooled<ushort[,,]> blocks,
             IndexBuffer indexBuffer, VertexBuffer vertexBuffer)
         {
             _indexBuffer = indexBuffer;
             _vertexBuffer = vertexBuffer;
             _graphicsDevice = graphicsDevice;
             _blocks = blocks;
-            Mesh = mesh;
 
             PerformanceCounter.AddChunkInfo(_vertexBuffer.VertexCount);
         }
@@ -82,17 +79,18 @@ namespace CubeCity.GameObjects
                 PrimitiveType.TriangleList, 0, 0, _indexBuffer.IndexCount / 3);
         }
 
+        /*
         public void Update(SimpleMesh mesh, Pooled<ushort[,,]> blocks)
         {
             CheckDisposed();
             DisposePooledObjects();
 
-            Mesh = mesh;
             _blocks = blocks;
 
             _indexBuffer.SetData(mesh.Triangles.Array, 0, mesh.Triangles.Length);
             _vertexBuffer.SetData(mesh.Vertices.Array, 0, mesh.Vertices.Length);
         }
+        */
 
         private void CheckDisposed()
         {
@@ -136,13 +134,11 @@ namespace CubeCity.GameObjects
             Position = position;
         }
 
-        public void Update(SimpleMesh mesh, Pooled<ushort[,,]> blocks, 
-            IndexBuffer indexBuffer, VertexBuffer vertexBuffer)
+        public void Update(Pooled<ushort[,,]> blocks, IndexBuffer indexBuffer, VertexBuffer vertexBuffer)
         {
             if (DrawData == null)
             {
-                DrawData = new ChunkDrawData(_graphicsDevice,
-                    mesh, blocks, indexBuffer, vertexBuffer);
+                DrawData = new ChunkDrawData(_graphicsDevice, blocks, indexBuffer, vertexBuffer);
             }
             else
             {

@@ -5,75 +5,6 @@ using Microsoft.Extensions.Logging;
 
 namespace CubeCity.Pools
 {
-    public class PoolBase
-    {
-        protected ILogger Logger { get; private set; }
-
-        public void SetupLogger(ILogger logger)
-        {
-            Logger = logger;
-        }
-
-        public 
-    }
-
-    public class PooledMemory<TMemory> where TMemory : struct
-    {
-        private int _memoryUsersCount;
-        private TMemory _items;
-
-        private readonly Action<PooledMemory<TMemory>> _returnAction;
-
-        public TMemory Items
-        {
-            get
-            {
-                if (_memoryUsersCount < 1)
-                    Throw();
-
-                return _items;
-            }
-        }
-
-        public PooledMemory(TMemory items, Action<PooledMemory<TMemory>> returnAction)
-        {
-            _returnAction = returnAction;
-            Initialize(items);
-        }
-
-        public void Initialize(TMemory items)
-        {
-            _items = items;
-            _memoryUsersCount = 1;
-        }
-
-        public void AddMemoryUser()
-        {
-            _memoryUsersCount++;
-        }
-
-        public bool RemoveMemoryUser()
-        {
-            if (--_memoryUsersCount < 1)
-            {
-                if (_memoryUsersCount == 0)
-                {
-                    _returnAction.Invoke(this);
-                    return true;
-                }
-
-                Throw();
-            }
-
-            return false;
-        }
-
-        private static void Throw()
-        {
-            throw new InvalidOperationException();
-        }
-    }
-
     public class GraphicsGeneratorItemsPool
     {
         private readonly ConcurrentDictionary<int, ConcurrentQueue<GraphicsGeneratorPooledData>> _pool;
@@ -143,6 +74,7 @@ namespace CubeCity.Pools
             var faceCount = v1.Length / 4;
             var queue = _pool.GetOrAdd(faceCount, _ => new ConcurrentQueue<GraphicsGeneratorPooledData>());
             queue.Enqueue(new GraphicsGeneratorPooledData(v1, v2, v3));
+            _pooledMemory.Enqueue(pooledMemory);
         }
     }
 
@@ -198,7 +130,7 @@ namespace CubeCity.Pools
             {
                 if (_memoryUsersCount == 0)
                 {
-                    Items.Return(this);
+                    _items.Return(this);
                     return true;
                 }
 

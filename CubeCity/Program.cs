@@ -11,8 +11,9 @@ namespace CubeCity
         {
             GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
 
-            if (OperatingSystem.IsWindows())
-                ConsoleTools.OpenConsole();
+            // if (OperatingSystem.IsWindows())
+            
+            ConsoleTools.OpenConsole();
 
             using var game = new MainGame();
             game.Run();

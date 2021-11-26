@@ -112,22 +112,22 @@ namespace CubeCity.Generators.Pipelines
             }
 
             var builder = new ChunkMeshBuilder(_blockTypes, blocks);
-            var mesh = builder.Build();
+            var pool = builder.Build();
+            var mesh = pool.Items;
 
             var indexBuffer = new IndexBuffer(_graphicsDevice,
-                IndexElementSize.ThirtyTwoBits, mesh.Triangles.Length, BufferUsage.None);
+                IndexElementSize.ThirtyTwoBits, mesh.TrianglesSize, BufferUsage.None);
 
-            indexBuffer.SetData(mesh.Triangles.Array, 0, mesh.Triangles.Length);
+            indexBuffer.SetData(mesh.InternalTriangles, 0, mesh.TrianglesSize);
 
             var vertexBuffer = new VertexBuffer(_graphicsDevice,
-                typeof(VertexPositionTexture), mesh.Vertices.Length, BufferUsage.None);
+                typeof(VertexPositionTexture), mesh.TextureSize, BufferUsage.None);
 
-            vertexBuffer.SetData(mesh.Vertices.Array, 0, mesh.Vertices.Length);
+            vertexBuffer.SetData(mesh.InternalTexture, 0, mesh.TextureSize);
 
-            mesh.Vertices.Dispose();
-            mesh.Triangles.Dispose();
-
-            var response = new ChunkGenerateResponse(new ChunkInfo(mesh, pooledBlocks), 
+            pool.RemoveMemoryUser();
+            
+            var response = new ChunkGenerateResponse(new ChunkInfo(pooledBlocks), 
                 position, vertexBuffer, indexBuffer);
 
             _responses.Enqueue(response);

@@ -71,8 +71,7 @@ namespace CubeCity.Managers
             {
                 if (_chunks.TryGetValue(generated.Position, out var chunk))
                 {
-                    chunk.Update(generated.ChunkInfo.Mesh, generated.ChunkInfo.Blocks, 
-                        generated.IndexBuffer, generated.VertexBuffer);
+                    chunk.Update(generated.ChunkInfo.Blocks, generated.IndexBuffer, generated.VertexBuffer);
                 }
             }
         }

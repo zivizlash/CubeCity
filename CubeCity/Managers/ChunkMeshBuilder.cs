@@ -32,71 +32,6 @@ namespace CubeCity.Managers
         }
     }
 
-    public class TextureVerticesBufferPool<T>
-    {
-        private readonly GraphicsDevice _graphicsDevice;
-        private readonly Dictionary<int, Stack<T[]>> _pool;
-
-        public TextureVerticesBufferPool(GraphicsDevice graphicsDevice)
-        {
-            _graphicsDevice = graphicsDevice;
-            _pool = new Dictionary<int, Stack<T[]>>();
-        }
-
-        // После загрузки данных в оперативку данные можно почистить
-
-        //public VertexBuffer RentBuffer(int size)
-        //{
-        //    // Допишу потом 
-        //}
-    }
-
-    public class IndexBufferPool
-    {
-        private readonly GraphicsDevice _graphicsDevice;
-        private readonly Dictionary<int, Stack<IndexBuffer>> _pool;
-
-        public IndexBufferPool(GraphicsDevice graphicsDevice)
-        {
-            _graphicsDevice = graphicsDevice;
-            _pool = new Dictionary<int, Stack<IndexBuffer>>();
-        }
-
-        public IndexBuffer RentBuffer(int size)
-        {
-            var normalizedSize = GetNormalizedSize(size);
-
-            if (_pool.TryGetValue(normalizedSize, out var buffers))
-            {
-                if (buffers.TryPop(out var buffer))
-                    return buffer;
-            }
-
-            return new IndexBuffer(_graphicsDevice, 
-                IndexElementSize.ThirtyTwoBits, normalizedSize, BufferUsage.None);
-        }
-
-        public void ReturnBuffer(IndexBuffer indexBuffer)
-        {
-            var size = indexBuffer.IndexCount;
-
-            if (GetNormalizedSize(size) != size)
-                throw new InvalidOperationException();
-
-            if (_pool.TryGetValue(size, out var buffers))
-            {
-                buffers.Push(indexBuffer);
-            }
-            else
-            {
-                _pool[size] = new Stack<IndexBuffer>();
-                _pool[size].Push(indexBuffer);
-            }
-        }
-
-        private static int GetNormalizedSize(int size) => size - size % 1024 + 1024;
-    }
-
     public struct ChunkMeshBuilder
     {
         private const int FaceCount = 6;
@@ -123,21 +58,13 @@ namespace CubeCity.Managers
             _blockRanks = GetBlockRanks(blocks);
         }
 
-        public SimpleMesh Build()
-        {
-            //int maxVerticesCount = _blocks.Length * FaceCount * VerticesInFace;
-            //int maxUvsCount = _blocks.Length * FaceCount * UvsInFace;
-            //int maxTrianglesCount = _blocks.Length * FaceCount * TrianglesInFace;
+        public PooledMemory<TexturePositionVertices> Build()
+        {            
+            var tempBuffers = GraphicsGeneratorItemsPool.Instance.Get(FaceCount * _blocks.Length);
 
-            //_verticesBuffer = ChunkBuilderPools.VerticesPool.Rent(maxVerticesCount);
-            //_uvsBuffer = ChunkBuilderPools.UvsPool.Rent(maxUvsCount);
-            //_trianglesBuffer = ChunkBuilderPools.TrianglesPool.Rent(maxTrianglesCount);
-
-            var buffers = GraphicsGeneratorItemsPool.Instance.Get(FaceCount);
-
-            _verticesBuffer = buffers.Items.InternalVertices;
-            _uvsBuffer = buffers.Items.InternalTextures;
-            _trianglesBuffer = buffers.Items.InternalIndices;
+            _verticesBuffer = tempBuffers.Items.InternalVertices;
+            _uvsBuffer = tempBuffers.Items.InternalTextures;
+            _trianglesBuffer = tempBuffers.Items.InternalIndices;
 
             for (int x = 0; x < _blockRanks.X; x++)
             for (int y = 0; y < _blockRanks.Y; y++)
@@ -145,10 +72,10 @@ namespace CubeCity.Managers
                 if (BlockExists(x, y, z))
                     UpdateMeshData(x, y, z);
 
-
-
-            var vertices = StorageMeshPools.VertexTexturePool.Rent(_verticesIndex);
-            var triangles = StorageMeshPools.TrianglesPool.Rent(_trianglesIndex);
+            var pooledMemory = TexturePositionVerticesMemoryPool.Instance.Get(_trianglesIndex);
+            
+            var vertices = pooledMemory.InternalItems.InternalTexture; // StorageMeshPools.VertexTexturePool.Rent(_verticesIndex);
+            var triangles = pooledMemory.InternalItems.InternalTriangles; //StorageMeshPools.TrianglesPool.Rent(_trianglesIndex);
 
             Array.Copy(_trianglesBuffer, triangles, _trianglesIndex);
 
@@ -158,21 +85,19 @@ namespace CubeCity.Managers
                     _verticesBuffer[vertexIndex], _uvsBuffer[vertexIndex]);
             }
 
-            ChunkBuilderPools.VerticesPool.Return(_verticesBuffer);
-            ChunkBuilderPools.TrianglesPool.Return(_trianglesBuffer);
-            ChunkBuilderPools.UvsPool.Return(_uvsBuffer);
+            tempBuffers.RemoveMemoryUser();
+            
+            // var pooledVertices = new PooledArraySegment<VertexPositionTexture>(
+            //     new Pooled<VertexPositionTexture[]>(vertices, StorageMeshPools.Return), 
+            //     _verticesIndex);
+            //
+            // var pooledTriangles = new PooledArraySegment<int>(
+            //     new Pooled<int[]>(triangles, StorageMeshPools.Return), 
+            //     _trianglesIndex);
 
-            buffers.RemoveMemoryUser();
-
-            var pooledVertices = new PooledArraySegment<VertexPositionTexture>(
-                new Pooled<VertexPositionTexture[]>(vertices, StorageMeshPools.Return), 
-                _verticesIndex);
-
-            var pooledTriangles = new PooledArraySegment<int>(
-                new Pooled<int[]>(triangles, StorageMeshPools.Return), 
-                _trianglesIndex);
-
-            return new SimpleMesh(pooledVertices, pooledTriangles);
+            return pooledMemory;
+            
+            // return new SimpleMesh(pooledVertices, pooledTriangles);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

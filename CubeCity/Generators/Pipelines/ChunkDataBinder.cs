@@ -81,7 +81,7 @@ namespace CubeCity.Generators.Pipelines
 
         private void Process(ChunkBindRequest request)
         {
-            var builder = new ChunkMeshBuilder(_blockTypes, request.Blocks);
+            /*var builder = new ChunkMeshBuilder(_blockTypes, request.Blocks);
             var mesh = builder.Build();
 
             var indexBuffer = new IndexBuffer(_graphicsDevice, IndexElementSize.ThirtyTwoBits,
@@ -96,7 +96,7 @@ namespace CubeCity.Generators.Pipelines
             mesh.Triangles.Dispose();
             mesh.Vertices.Dispose();
 
-            _responses.Enqueue(new ChunkBindResponse(indexBuffer, verticesBuffer, request.Blocks));
+            _responses.Enqueue(new ChunkBindResponse(indexBuffer, verticesBuffer, request.Blocks));*/
         }
     }
 }
