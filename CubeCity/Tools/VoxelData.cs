@@ -6,24 +6,24 @@ namespace CubeCity.Tools
     {
         public static readonly Vector3Int[] Faces =
         {
-            new Vector3Int( 0,  0, -1),
-            new Vector3Int( 0,  0,  1),
-            new Vector3Int( 0,  1,  0),
-            new Vector3Int( 0, -1,  0),
-            new Vector3Int(-1,  0,  0),
-            new Vector3Int( 1,  0,  0)
+            new( 0,  0, -1),
+            new( 0,  0,  1),
+            new( 0,  1,  0),
+            new( 0, -1,  0),
+            new(-1,  0,  0),
+            new( 1,  0,  0)
         };
 
         public static readonly Vector3[] Verts =
         {
-            new Vector3(0.0f, 0.0f, 0.0f),
-            new Vector3(1.0f, 0.0f, 0.0f),
-            new Vector3(1.0f, 1.0f, 0.0f),
-            new Vector3(0.0f, 1.0f, 0.0f),
-            new Vector3(0.0f, 0.0f, 1.0f),
-            new Vector3(1.0f, 0.0f, 1.0f),
-            new Vector3(1.0f, 1.0f, 1.0f),
-            new Vector3(0.0f, 1.0f, 1.0f)
+            new(0.0f, 0.0f, 0.0f),
+            new(1.0f, 0.0f, 0.0f),
+            new(1.0f, 1.0f, 0.0f),
+            new(0.0f, 1.0f, 0.0f),
+            new(0.0f, 0.0f, 1.0f),
+            new(1.0f, 0.0f, 1.0f),
+            new(1.0f, 1.0f, 1.0f),
+            new(0.0f, 1.0f, 1.0f)
         };
 
         public static readonly int[,] Tris =
@@ -40,10 +40,10 @@ namespace CubeCity.Tools
 
         public static readonly Vector2[] VoxelUvs =
         {
-            new Vector2(0.0f, 0.0f),
-            new Vector2(0.0f, 1.0f),
-            new Vector2(1.0f, 0.0f),
-            new Vector2(1.0f, 1.0f)
+            new(0.0f, 0.0f),
+            new(0.0f, 1.0f),
+            new(1.0f, 0.0f),
+            new(1.0f, 1.0f)
         };
     }
 }

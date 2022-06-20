@@ -83,7 +83,7 @@ namespace CubeCity.Generators.Pipelines
                 {
                     int height;
 
-                    if (chunkGenType > 0.1f)
+                    if (true) //chunkGenType > 0.1f)
                     {
                         height = Math.Abs((int)MathF.Round(_perlinNoiseNoise.Noise(
                             (position.X * 16 + x) * 0.04f,

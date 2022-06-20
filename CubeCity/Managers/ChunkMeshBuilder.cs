@@ -104,14 +104,13 @@ namespace CubeCity.Managers
         private void UpdateMeshData(int x, int y, int z)
         {
             var pos = new Vector3Int(x, y, z);
+            var blockId = _blocks[pos.X, pos.Y, pos.Z];
 
             for (int face = 0; face < 6; face++)
             {
                 // При face = 2 - это верх.
                 if (!BlockExistsOrWorldBottom(pos + VoxelData.Faces[face]))
                 {
-                    var blockId = _blocks[pos.X, pos.Y, pos.Z];
-
                     _verticesBuffer[_verticesIndex + 0] = pos + VoxelData.Verts[VoxelData.Tris[face, 0]];
                     _verticesBuffer[_verticesIndex + 1] = pos + VoxelData.Verts[VoxelData.Tris[face, 1]];
                     _verticesBuffer[_verticesIndex + 2] = pos + VoxelData.Verts[VoxelData.Tris[face, 2]];
