@@ -2,6 +2,7 @@
 
 namespace CubeCity.Managers
 {
+    // https://gist.github.com/awilki01/83b65ad852a0ab30192af07cda3d7c0b
     public class DiamondSquare
     {
         private readonly int _terrainPoints;

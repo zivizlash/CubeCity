@@ -2,6 +2,7 @@
 
 namespace CubeCity.Tools
 {
+    // https://habr.com/ru/post/265775/
     public class PerlinNoise2D
     {
         private readonly byte[] _permutationTable;
