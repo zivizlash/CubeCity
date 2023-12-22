@@ -67,16 +67,25 @@ namespace CubeCity.Managers
             _trianglesBuffer = tempBuffers.Items.InternalIndices;
 
             for (int x = 0; x < _blockRanks.X; x++)
-            for (int y = 0; y < _blockRanks.Y; y++)
-            for (int z = 0; z < _blockRanks.Z; z++)
-                if (BlockExists(x, y, z))
-                    UpdateMeshData(x, y, z);
+            {
+                for (int y = 0; y < _blockRanks.Y; y++)
+                {
+                    for (int z = 0; z < _blockRanks.Z; z++)
+                    {
+                        if (BlockExists(x, y, z))
+                        {
+                            UpdateMeshData(x, y, z);
+                        }
+                    }
+                }
+            }
 
             var pooledMemory = TexturePositionVerticesMemoryPool.Instance.Get(_trianglesIndex);
             
-            var vertices = pooledMemory.InternalItems.InternalTexture; // StorageMeshPools.VertexTexturePool.Rent(_verticesIndex);
-            var triangles = pooledMemory.InternalItems.InternalTriangles; //StorageMeshPools.TrianglesPool.Rent(_trianglesIndex);
+            var vertices = pooledMemory.InternalItems.InternalTexture;
+            var triangles = pooledMemory.InternalItems.InternalTriangles;
 
+            Array.Clear(triangles, _trianglesIndex, triangles.Length - _trianglesIndex);
             Array.Copy(_trianglesBuffer, triangles, _trianglesIndex);
 
             for (int vertexIndex = 0; vertexIndex < _verticesIndex; vertexIndex++)
@@ -86,18 +95,7 @@ namespace CubeCity.Managers
             }
 
             tempBuffers.RemoveMemoryUser();
-            
-            // var pooledVertices = new PooledArraySegment<VertexPositionTexture>(
-            //     new Pooled<VertexPositionTexture[]>(vertices, StorageMeshPools.Return), 
-            //     _verticesIndex);
-            //
-            // var pooledTriangles = new PooledArraySegment<int>(
-            //     new Pooled<int[]>(triangles, StorageMeshPools.Return), 
-            //     _trianglesIndex);
-
             return pooledMemory;
-            
-            // return new SimpleMesh(pooledVertices, pooledTriangles);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -146,10 +144,7 @@ namespace CubeCity.Managers
         {
             if (pos.X >= _blockRanks.X || pos.X < 0) return false;
             if (pos.Z >= _blockRanks.Z || pos.Z < 0) return false;
-            if (pos.Y >= _blockRanks.Y) return false;
-
-            if (pos.Y < 0)
-                return true;
+            if (pos.Y >= _blockRanks.Y || pos.Y < 0) return false;
 
             return _blocks[pos.X, pos.Y, pos.Z] != 0;
         }

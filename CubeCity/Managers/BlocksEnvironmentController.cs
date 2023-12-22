@@ -47,11 +47,11 @@ namespace CubeCity.Managers
             {
                 for (int z = -halfSize; z < halfSize; z++)
                 {
-                    var chunkPosition = chunkPos + new Vector2Int(x, z);
+                    var deltaChunkPos = chunkPos + new Vector2Int(x, z);
 
-                    if (!_chunks.ContainsKey(chunkPosition))
+                    if (!_chunks.ContainsKey(deltaChunkPos))
                     {
-                        _chunks.Add(chunkPosition, _chunkManager.GenerateChunk(chunkPosition));
+                        _chunks.Add(deltaChunkPos, _chunkManager.GenerateChunk(deltaChunkPos));
                     }
                 }
             }
@@ -72,6 +72,10 @@ namespace CubeCity.Managers
         public static Vector2Int GetChunkPosByPlayerPos(Vector3 playerPos)
         {
             return new Vector2Int(
+                (int)(playerPos.X / 16),
+                (int)(playerPos.Z / 16));
+
+            return new Vector2Int(
                 (int)Math.Round(playerPos.X, MidpointRounding.ToPositiveInfinity) / 16,
                 (int)Math.Round(playerPos.Z, MidpointRounding.ToPositiveInfinity) / 16);
         }
@@ -81,6 +85,19 @@ namespace CubeCity.Managers
             return 
                 Math.Abs(playerPos.X - chunkPos.X) < rangeSize &&
                 Math.Abs(playerPos.Y - chunkPos.Y) < rangeSize;
+        }
+
+        internal void RegenerateCurrentChunk(Vector3 playerPos)
+        {
+            var chunkPos = GetChunkPosByPlayerPos(playerPos);
+
+            if (_chunks.TryGetValue(chunkPos, out var chunk) && chunk.IsInWorld)
+            {
+                _chunkManager.RemoveChunk(chunk.Position);
+                _chunks.Remove(chunk.Position);
+            }
+
+            _chunks.Add(chunkPos, _chunkManager.GenerateChunk(chunkPos));
         }
     }
 }

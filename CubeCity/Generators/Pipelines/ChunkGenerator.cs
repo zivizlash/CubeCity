@@ -46,8 +46,7 @@ namespace CubeCity.Generators.Pipelines
 
         public void AddGenerationRequest(ChunkGenerateRequest request)
         {
-            if (!_requests.Post(request))
-                throw new InvalidOperationException();
+            if (!_requests.Post(request)) throw new InvalidOperationException();
         }
 
         public bool TryGetChunk(out ChunkGenerateResponse response)
@@ -75,7 +74,7 @@ namespace CubeCity.Generators.Pipelines
             var pooledBlocks = ChunkBlocksPool.Get(16, 128);
             var blocks = pooledBlocks.Resource;
 
-            var chunkGenType = _perlinNoiseNoise.Noise(position.X * 0.1f, position.Y * 0.1f);
+            //var chunkGenType = _perlinNoiseNoise.Noise(position.X * 0.1f, position.Y * 0.1f);
 
             for (int x = 0; x < 16; x++)
             {
@@ -124,7 +123,7 @@ namespace CubeCity.Generators.Pipelines
                 typeof(VertexPositionTexture), mesh.TextureSize, BufferUsage.None);
 
             vertexBuffer.SetData(mesh.InternalTexture, 0, mesh.TextureSize);
-
+            
             pool.RemoveMemoryUser();
             
             var response = new ChunkGenerateResponse(new ChunkInfo(pooledBlocks), 

@@ -1,14 +1,10 @@
-﻿using System;
+﻿using CubeCity.Tools;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Buffers;
 using System.Collections.Concurrent;
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics;
 using System.Threading;
-using CubeCity.Tools;
-using Microsoft.Xna.Framework.Graphics;
-using Vector2 = Microsoft.Xna.Framework.Vector2;
-using Vector3 = Microsoft.Xna.Framework.Vector3;
 
 namespace CubeCity.Models
 {

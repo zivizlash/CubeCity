@@ -47,6 +47,8 @@ namespace CubeCity.Pools
         private readonly ConcurrentDictionary<int, ConcurrentQueue<TMemory>> _memoryPool;
         private readonly Action<PooledMemory<TMemory>> _returnDelegateCache;
 
+        private static readonly Func<int, ConcurrentQueue<TMemory>> _createFunc = _ => new ConcurrentQueue<TMemory>();
+
         protected PoolBase()
         {
             _memoryPool = new();
@@ -63,7 +65,7 @@ namespace CubeCity.Pools
         {
             var key = GetShardedKey(memory.InternalItems);
 
-            var queue = _memoryPool.GetOrAdd(key, _ => new ConcurrentQueue<TMemory>());
+            var queue = _memoryPool.GetOrAdd(key, _createFunc);
             queue.Enqueue(memory.InternalItems);
 
             _containersPool.Enqueue(memory);

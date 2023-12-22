@@ -1,6 +1,5 @@
-﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
+using System.Diagnostics;
 
 namespace CubeCity.Tools
 {
@@ -31,6 +30,11 @@ namespace CubeCity.Tools
         public static Vector3 operator +(Vector3Int left, Vector3 right)
         {
             return new Vector3(left.X + right.X, left.Y + right.Y, left.Z + right.Z);
+        }
+
+        public override readonly string ToString()
+        {
+            return $"X: {X}; Y: {Y}; Z: {Z};";
         }
     }
 }

@@ -58,7 +58,12 @@ namespace CubeCity.Tools
                 (int)Math.Round(position.X, MidpointRounding.ToPositiveInfinity),
                 (int)Math.Round(position.Z, MidpointRounding.ToPositiveInfinity));
         }
-        
+
+        public override string ToString()
+        {
+            return $"X: {X}; Y: {Y};";
+        }
+
         public override int GetHashCode()
         {
             return HashCode.Combine(X, Y);
