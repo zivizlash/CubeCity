@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Runtime;
 using System.Runtime.InteropServices;
 
@@ -10,6 +11,10 @@ namespace CubeCity
         public static void Main()
         {
             GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
+
+            var boundingBox = new BoundingBox();
+
+
 
             if (OperatingSystem.IsWindows())
                 ConsoleTools.OpenConsole();
