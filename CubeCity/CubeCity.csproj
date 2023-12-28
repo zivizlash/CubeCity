@@ -17,7 +17,6 @@
 	<ItemGroup>
 		<None Remove="Icon.ico" />
 		<None Remove="Icon.bmp" />
-		<None Remove="Systems\ChunkSystem.cs~RF2ab802f5.TMP" />
 	</ItemGroup>
 
 	<ItemGroup>
