@@ -50,7 +50,7 @@ public class EcsDisplayInfoSystem : IEcsRunSystem
             _spriteBatch.Begin();
 
             var pos = _camera.Position;
-            var chunkPos = BlocksEnvironmentController.GetChunkPosByPlayerPos(pos);
+            var chunkPos = BlocksTools.GetChunkPosByWorld(pos);
             var blockPos = new Vector3Int((int)pos.X % 16, (int)pos.Y % 16, (int)pos.Z % 16);
 
             _spriteBatch.DrawString(_spriteFont,

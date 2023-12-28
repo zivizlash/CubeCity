@@ -11,63 +11,70 @@ using System.Text.Json;
 using CubeCity.Pools;
 using Microsoft.Extensions.Logging;
 
-namespace CubeCity.Models
+namespace CubeCity.Models;
+
+public static class GameSettingsProvider
 {
-    public class GameServices
+    private static GameSettings? _settings;
+
+    public static GameSettings Settings => 
+        _settings ??= JsonSerializer.Deserialize<GameSettings>(File.ReadAllText("appsettings.json"))
+            ?? throw new InvalidOperationException();
+}
+
+public class GameServices
+{
+    public Camera Camera { get; }
+    public MouseManager MouseManager { get; }
+    public ChunkGenerator ChunkGenerator { get; private set; }
+    public ChunkManager ChunkManager { get; private set; }
+    public BlocksEnvironmentController BlocksController { get; private set; }
+    public RasterizerState RasterizerState { get; }
+    public KeyboardInputManager KeyboardManager { get; }
+    public GamepadInputManager GamepadManager { get; }
+    public GameSettings Settings { get; }
+    public bool UseCameraGravity { get; set; }
+
+    public ILoggerFactory GameLoggerFactory { get; }
+
+    public GameServices(GameWindow window)
     {
-        public Camera Camera { get; }
-        public MouseManager MouseManager { get; }
-        public ChunkGenerator ChunkGenerator { get; private set; }
-        public ChunkManager ChunkManager { get; private set; }
-        public BlocksEnvironmentController BlocksController { get; private set; }
-        public RasterizerState RasterizerState { get; }
-        public KeyboardInputManager KeyboardManager { get; }
-        public GamepadInputManager GamepadManager { get; }
-        public GameSettings Settings { get; }
-        public bool UseCameraGravity { get; set; }
+        GameLoggerFactory = LoggerFactory.Create(logging => logging.AddConsole());
+        var logger = GameLoggerFactory.CreateLogger<GameServices>();
 
-        public ILoggerFactory GameLoggerFactory { get; }
+        Settings = GameSettingsProvider.Settings;
 
-        public GameServices(GameWindow window)
+        logger.LogInformation(
+            "Loaded settings: ViewDistance {ViewDistance}; Generator Threads {GeneratorThreads};", 
+            Settings.ChunksViewDistance, Settings.GeneratingChunkThreads);
+
+        GraphicsGeneratorItemsPool.Instance.SetupLogger(GameLoggerFactory.CreateLogger<GraphicsGeneratorItemsPool>());
+
+        Camera = new Camera();
+
+        MouseManager = new MouseManager(window)
         {
-            GameLoggerFactory = LoggerFactory.Create(logging => logging.AddConsole());
-            var logger = GameLoggerFactory.CreateLogger<GameServices>();
-            
-            Settings = JsonSerializer.Deserialize<GameSettings>(File.ReadAllText("appsettings.json"))
-                ?? throw new InvalidOperationException();
+            MouseSensitivity = Settings.MouseSensitivity,
+            GamepadSensitivity = Settings.GamepadSensitivity
+        };
 
-            logger.LogInformation(
-                "Loaded settings: ViewDistance {ViewDistance}; Generator Threads {GeneratorThreads};", 
-                Settings.ChunksViewDistance, Settings.GeneratingChunkThreads);
-
-            GraphicsGeneratorItemsPool.Instance.SetupLogger(GameLoggerFactory.CreateLogger<GraphicsGeneratorItemsPool>());
-
-            Camera = new Camera();
-
-            MouseManager = new MouseManager(window)
-            {
-                MouseSensitivity = Settings.MouseSensitivity,
-                GamepadSensitivity = Settings.GamepadSensitivity
-            };
-
-            RasterizerState = new RasterizerState
-            {
-                CullMode = CullMode.CullClockwiseFace,
-                MultiSampleAntiAlias = true
-            };
-
-            KeyboardManager = new KeyboardInputManager();
-            GamepadManager = new GamepadInputManager();
-        }
-
-        public void Initialize(GraphicsDevice graphicsDevice)
+        RasterizerState = new RasterizerState
         {
-            ChunkGenerator = new ChunkGenerator(
-                new PerlinNoise2D(), Settings.Blocks, Settings.GeneratingChunkThreads, graphicsDevice);
+            CullMode = CullMode.CullClockwiseFace,
+            MultiSampleAntiAlias = true
+        };
 
-            ChunkManager = new ChunkManager(ChunkGenerator, graphicsDevice);
-            BlocksController = new BlocksEnvironmentController(
-                ChunkManager, new Vector3(0, 64, 0), Settings.ChunksViewDistance);
-        }
+        KeyboardManager = new KeyboardInputManager();
+        GamepadManager = new GamepadInputManager();
+    }
+
+    public void Initialize(GraphicsDevice graphicsDevice)
+    {
+        ChunkGenerator = new ChunkGenerator(
+            new PerlinNoise2D(), Settings.Blocks, Settings.GeneratingChunkThreads, graphicsDevice);
+
+        ChunkManager = new ChunkManager(ChunkGenerator, graphicsDevice);
+        BlocksController = new BlocksEnvironmentController(
+            ChunkManager, new Vector3(0, 64, 0), Settings.ChunksViewDistance);
     }
 }

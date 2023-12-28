@@ -46,7 +46,7 @@ namespace CubeCity.Systems
                 _spriteBatch.Begin();
 
                 var pos = _gameServices.Camera.Position;
-                var chunkPos = BlocksEnvironmentController.GetChunkPosByPlayerPos(_gameServices.Camera.Position);
+                var chunkPos = BlocksTools.GetChunkPosByWorld(_gameServices.Camera.Position);
                 var blockPos = new Vector3Int((int)pos.X % 16, (int)pos.Y % 16, (int)pos.Z % 16);
 
                 _spriteBatch.DrawString(_spriteFont,

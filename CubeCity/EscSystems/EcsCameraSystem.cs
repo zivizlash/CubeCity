@@ -124,8 +124,7 @@ public class EcsCameraSystem : IEcsInitSystem, IEcsRunSystem
                     translation += new Vector3(sticks.Left.X, vertical, -sticks.Left.Y);
                 }
 
-                accelerate = Math.Clamp(
-                    Math.Abs(sticks.Left.X) + Math.Abs(sticks.Left.Y), 0, 1);
+                accelerate = Math.Clamp(Math.Abs(sticks.Left.X) + Math.Abs(sticks.Left.Y), 0, 1);
             }
 
             if (gamepad.IsButtonDown(Buttons.RightShoulder))

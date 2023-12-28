@@ -1,103 +1,83 @@
-﻿using System;
-using System.Collections.Generic;
-using CubeCity.GameObjects;
+﻿using CubeCity.GameObjects;
 using CubeCity.Tools;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 
-namespace CubeCity.Managers
+namespace CubeCity.Managers;
+
+public class BlocksEnvironmentController
 {
-    public class BlocksEnvironmentController
+    private readonly ChunkManager _chunkManager;
+    private readonly Dictionary<Vector2Int, Chunk> _chunks;
+    private readonly int _size;
+
+    private Vector2Int _previousChunkPos;
+
+    public BlocksEnvironmentController(ChunkManager chunkManager, Vector3 playerPos, int size)
     {
-        private readonly ChunkManager _chunkManager;
-        private readonly Dictionary<Vector2Int, Chunk> _chunks;
-        private readonly int _size;
+        _size = size;
+        _chunkManager = chunkManager;
+        _chunks = new Dictionary<Vector2Int, Chunk>(new Vector2IntEqualityComparer());
+        _previousChunkPos = BlocksTools.GetChunkPosByWorld(playerPos);
+    }
 
-        private Vector2Int _previousChunkPos;
+    public void ForceChunkGenerate(Vector3 playerPos)
+    {
+        ForceUpdateInternal(BlocksTools.GetChunkPosByWorld(playerPos));
+    }
 
-        public BlocksEnvironmentController(ChunkManager chunkManager, Vector3 playerPos, int size)
+    public void UpdatePlayerPosition(Vector3 playerPos)
+    {
+        var chunkPos = BlocksTools.GetChunkPosByWorld(playerPos);
+
+        if (chunkPos == _previousChunkPos)
+            return;
+
+        ForceUpdateInternal(chunkPos);
+    }
+
+    private void ForceUpdateInternal(Vector2Int chunkPos)
+    {
+        _previousChunkPos = chunkPos;
+
+        var halfSize = _size / 2;
+
+        for (int x = -halfSize; x < halfSize; x++)
         {
-            _size = size;
-            _chunkManager = chunkManager;
-            _chunks = new Dictionary<Vector2Int, Chunk>(new Vector2IntEqualityComparer());
-            _previousChunkPos = GetChunkPosByPlayerPos(playerPos);
-        }
-
-        public void ForceChunkGenerate(Vector3 playerPos)
-        {
-            ForceUpdateInternal(GetChunkPosByPlayerPos(playerPos));
-        }
-
-        public void UpdatePlayerPosition(Vector3 playerPos)
-        {
-            var chunkPos = GetChunkPosByPlayerPos(playerPos);
-
-            if (chunkPos == _previousChunkPos)
-                return;
-
-            ForceUpdateInternal(chunkPos);
-        }
-
-        private void ForceUpdateInternal(Vector2Int chunkPos)
-        {
-            _previousChunkPos = chunkPos;
-
-            var halfSize = _size / 2;
-
-            for (int x = -halfSize; x < halfSize; x++)
+            for (int z = -halfSize; z < halfSize; z++)
             {
-                for (int z = -halfSize; z < halfSize; z++)
-                {
-                    var deltaChunkPos = chunkPos + new Vector2Int(x, z);
+                var deltaChunkPos = chunkPos + new Vector2Int(x, z);
 
-                    if (!_chunks.ContainsKey(deltaChunkPos))
-                    {
-                        _chunks.Add(deltaChunkPos, _chunkManager.GenerateChunk(deltaChunkPos));
-                    }
-                }
-            }
-            
-            foreach (var chunk in _chunks.Values)
-            {
-                if (!IsInRange(chunkPos, chunk.Position, _size + 4))
+                if (!_chunks.ContainsKey(deltaChunkPos))
                 {
-                    if (chunk.IsInWorld)
-                    {
-                        _chunkManager.RemoveChunk(chunk.Position);
-                        _chunks.Remove(chunk.Position);
-                    }
+                    _chunks.Add(deltaChunkPos, _chunkManager.GenerateChunk(deltaChunkPos));
                 }
             }
         }
-
-        public static Vector2Int GetChunkPosByPlayerPos(Vector3 playerPos)
+        
+        foreach (var chunk in _chunks.Values)
         {
-            return new Vector2Int(
-                (int)(playerPos.X / 16),
-                (int)(playerPos.Z / 16));
-
-            return new Vector2Int(
-                (int)Math.Round(playerPos.X, MidpointRounding.ToPositiveInfinity) / 16,
-                (int)Math.Round(playerPos.Z, MidpointRounding.ToPositiveInfinity) / 16);
-        }
-
-        private static bool IsInRange(Vector2Int playerPos, Vector2Int chunkPos, int rangeSize)
-        {
-            return 
-                Math.Abs(playerPos.X - chunkPos.X) < rangeSize &&
-                Math.Abs(playerPos.Y - chunkPos.Y) < rangeSize;
-        }
-
-        internal void RegenerateCurrentChunk(Vector3 playerPos)
-        {
-            var chunkPos = GetChunkPosByPlayerPos(playerPos);
-
-            if (_chunks.TryGetValue(chunkPos, out var chunk) && chunk.IsInWorld)
+            if (!BlocksTools.IsInRange(chunkPos, chunk.Position, _size + 4))
             {
-                _chunkManager.RemoveChunk(chunk.Position);
-                _chunks.Remove(chunk.Position);
+                if (chunk.IsInWorld)
+                {
+                    _chunkManager.RemoveChunk(chunk.Position);
+                    _chunks.Remove(chunk.Position);
+                }
             }
-
-            _chunks.Add(chunkPos, _chunkManager.GenerateChunk(chunkPos));
         }
+    }
+
+    internal void RegenerateCurrentChunk(Vector3 playerPos)
+    {
+        var chunkPos = BlocksTools.GetChunkPosByWorld(playerPos);
+
+        if (_chunks.TryGetValue(chunkPos, out var chunk) && chunk.IsInWorld)
+        {
+            _chunkManager.RemoveChunk(chunk.Position);
+            _chunks.Remove(chunk.Position);
+        }
+
+        _chunks.Add(chunkPos, _chunkManager.GenerateChunk(chunkPos));
     }
 }

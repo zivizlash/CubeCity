@@ -30,7 +30,7 @@ public class MoveSystem : IGameUpdateSystem
 
     public ushort GetBlockByPos(Vector3 pos)
     {
-        var chunkPos = BlocksEnvironmentController.GetChunkPosByPlayerPos(pos);
+        var chunkPos = BlocksTools.GetChunkPosByWorld(pos);
         var chunk = _gameServices.ChunkManager.GenerateChunk(chunkPos);
 
         if (chunk.IsInWorld)

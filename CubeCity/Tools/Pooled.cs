@@ -15,7 +15,7 @@ namespace CubeCity.Tools
 
         public void Dispose()
         {
-            _free.Invoke(Resource);
+            _free?.Invoke(Resource);
         }
     }
 }

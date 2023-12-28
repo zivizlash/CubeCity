@@ -26,7 +26,7 @@ namespace CubeCity.Managers
 
         public bool RemoveChunk(Vector2Int position)
         {
-            if (_chunks.TryGetValue(position, out var chunk))
+            if (_chunks.TryGetValue(position, out var chunk) && chunk.IsInWorld)
             {
                 chunk.Release();
                 _chunks.Remove(position);
@@ -46,6 +46,11 @@ namespace CubeCity.Managers
             _chunkGenerator.AddGenerationRequest(new ChunkGenerateRequest(position));
 
             return chunk;
+        }
+
+        public bool TryGetGeneratedChunks(out ChunkGenerateResponse response)
+        {
+            return _chunkGenerator.TryGetChunk(out response);
         }
 
         public void Draw(Matrix worldMatrix, BasicEffect effect)

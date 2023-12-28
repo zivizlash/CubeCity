@@ -1,37 +1,10 @@
 ﻿using CubeCity.EcsComponents;
 using CubeCity.GameObjects;
-using CubeCity.Generators.Pipelines;
-using CubeCity.Tools;
 using Leopotam.EcsLite;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System.Collections.Generic;
 
 namespace CubeCity.EscSystems;
-
-public class EcsChunkGeneratorSystem : IEcsInitSystem, IEcsRunSystem
-{
-    private readonly ChunkGenerator _chunkGenerator;
-    private readonly Camera _camera;
-    private readonly Dictionary<Vector2Int, Chunk> _chunks;
-
-    public EcsChunkGeneratorSystem(ChunkGenerator chunkGenerator, Camera camera)
-    {
-        _chunkGenerator = chunkGenerator;
-        _camera = camera;
-        _chunks = new Dictionary<Vector2Int, Chunk>(256);
-    }
-
-    public void Init(IEcsSystems systems)
-    {
-        throw new System.NotImplementedException();
-    }
-
-    public void Run(IEcsSystems systems)
-    {
-        throw new System.NotImplementedException();
-    }
-}
 
 public class EcsRenderSystem : IEcsInitSystem, IEcsRunSystem
 {
