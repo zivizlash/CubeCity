@@ -1,4 +1,4 @@
-﻿using CubeCity.EcsComponents;
+﻿using CubeCity.Components;
 using CubeCity.GameObjects;
 using CubeCity.Generators;
 using CubeCity.Generators.Pipelines;

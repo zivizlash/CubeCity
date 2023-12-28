@@ -150,9 +150,13 @@ public class CameraSystem : IEcsInitSystem, IEcsRunSystem
             var position = Vector3.Normalize(translation) * moveSpeed;
 
             if (Math.Abs(accelerate) < _moveThreshold)
+            {
                 camera.MoveRelativelyBy(position);
+            }
             else
+            {
                 camera.MoveRelativelyBy(position * accelerate);
+            }
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using CubeCity.Tools;
 using Leopotam.EcsLite;
 
-namespace CubeCity.EcsComponents;
+namespace CubeCity.Components;
 
 public struct GeneratingChunkComponent : IEcsAutoReset<GeneratingChunkComponent>
 {

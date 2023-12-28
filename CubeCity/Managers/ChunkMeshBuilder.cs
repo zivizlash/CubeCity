@@ -29,6 +29,10 @@ public struct ChunkMeshBuilder
         _blockTypes = blockTypes;
         _blocks = blocks;
         _blockRanks = GetBlockRanks(blocks);
+
+        _verticesBuffer = Array.Empty<Vector3>();
+        _uvsBuffer = Array.Empty<Vector2>();
+        _trianglesBuffer = Array.Empty<int>();
     }
 
     public PooledMemory<TexturePositionVertices> Build()

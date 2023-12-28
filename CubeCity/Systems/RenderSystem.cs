@@ -1,4 +1,4 @@
-﻿using CubeCity.EcsComponents;
+﻿using CubeCity.Components;
 using CubeCity.GameObjects;
 using Leopotam.EcsLite;
 using Microsoft.Xna.Framework;

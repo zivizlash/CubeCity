@@ -1,7 +1,7 @@
 ﻿using Leopotam.EcsLite;
 using Microsoft.Xna.Framework;
 
-namespace CubeCity.EcsComponents;
+namespace CubeCity.Components;
 
 public struct PositionComponent : IEcsAutoReset<PositionComponent>
 {

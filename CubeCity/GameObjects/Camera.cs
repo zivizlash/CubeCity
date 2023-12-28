@@ -34,11 +34,8 @@ public class Camera
 
     public void MoveRelativelyBy(Vector3 offset)
     {
-        var lookAtForward = Vector3.Normalize(
-            new Vector3(_cameraForward.X, 0, _cameraForward.Z));
-
-        var lookAtRight = Vector3.Normalize(
-            Vector3.Cross(_cameraForward, Vector3.Up));
+        var lookAtForward = Vector3.Normalize(new Vector3(_cameraForward.X, 0, _cameraForward.Z));
+        var lookAtRight = Vector3.Normalize(Vector3.Cross(_cameraForward, Vector3.Up));
 
         _cameraPosition += lookAtRight * offset.X;
         _cameraPosition -= lookAtForward * offset.Z;
