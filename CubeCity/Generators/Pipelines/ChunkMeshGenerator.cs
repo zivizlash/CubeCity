@@ -6,9 +6,9 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Runtime.CompilerServices;
 
-namespace CubeCity.Managers;
+namespace CubeCity.Generators.Pipelines;
 
-public struct ChunkMeshBuilder
+public struct ChunkMeshGenerator
 {
     private const int _faceCount = 6;
 
@@ -24,7 +24,7 @@ public struct ChunkMeshBuilder
     private Vector2[] _uvsBuffer;
     private int[] _trianglesBuffer;
 
-    public ChunkMeshBuilder(BlockType[] blockTypes, ushort[,,] blocks) : this()
+    public ChunkMeshGenerator(BlockType[] blockTypes, ushort[,,] blocks) : this()
     {
         _blockTypes = blockTypes;
         _blocks = blocks;
@@ -36,7 +36,7 @@ public struct ChunkMeshBuilder
     }
 
     public PooledMemory<TexturePositionVertices> Build()
-    {            
+    {
         var tempBuffers = GraphicsGeneratorItemsPool.Instance.Get(_faceCount * _blocks.Length);
 
         _verticesBuffer = tempBuffers.Items.InternalVertices;
@@ -58,7 +58,7 @@ public struct ChunkMeshBuilder
         }
 
         var pooledMemory = TexturePositionVerticesMemoryPool.Instance.Get(_trianglesIndex);
-        
+
         var vertices = pooledMemory.InternalItems.InternalTexture;
         var triangles = pooledMemory.InternalItems.InternalTriangles;
 

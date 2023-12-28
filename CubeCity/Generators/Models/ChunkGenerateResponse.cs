@@ -2,7 +2,7 @@
 using CubeCity.Tools;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace CubeCity.Generators;
+namespace CubeCity.Generators.Models;
 
 public readonly struct ChunkGenerateResponse
 {
@@ -11,7 +11,7 @@ public readonly struct ChunkGenerateResponse
     public VertexBuffer VertexBuffer { get; }
     public IndexBuffer IndexBuffer { get; }
 
-    public ChunkGenerateResponse(ChunkInfo chunkInfo, Vector2Int position, 
+    public ChunkGenerateResponse(ChunkInfo chunkInfo, Vector2Int position,
         VertexBuffer vertexBuffer, IndexBuffer indexBuffer)
     {
         ChunkInfo = chunkInfo;

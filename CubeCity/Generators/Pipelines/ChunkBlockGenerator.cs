@@ -1,5 +1,5 @@
 ﻿using CubeCity.Generators.Algs;
-using CubeCity.Managers;
+using CubeCity.Generators.Models;
 using CubeCity.Models;
 using CubeCity.Tools;
 using Microsoft.Xna.Framework.Graphics;
@@ -9,7 +9,7 @@ using System.Threading.Tasks.Dataflow;
 
 namespace CubeCity.Generators.Pipelines;
 
-public class ChunkGenerator
+public class ChunkBlockGenerator
 {
     private readonly ConcurrentQueue<ChunkGenerateResponse> _responses;
     private readonly ActionBlock<ChunkGenerateRequest> _requests;
@@ -23,7 +23,7 @@ public class ChunkGenerator
     
     public bool UsePerlinNoise { get; set; }
 
-    public ChunkGenerator(PerlinNoise2D perlinNoise, BlockType[] blockTypes, 
+    public ChunkBlockGenerator(PerlinNoise2D perlinNoise, BlockType[] blockTypes, 
         int generatingChunkThreads, GraphicsDevice graphicsDevice)
     {
         UsePerlinNoise = true;
@@ -111,7 +111,7 @@ public class ChunkGenerator
             }
         }
 
-        var builder = new ChunkMeshBuilder(_blockTypes, blocks);
+        var builder = new ChunkMeshGenerator(_blockTypes, blocks);
         var pool = builder.Build();
         var mesh = pool.Items;
 

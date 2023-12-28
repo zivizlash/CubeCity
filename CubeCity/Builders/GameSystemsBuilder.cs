@@ -2,7 +2,7 @@
 using CubeCity.Generators.Algs;
 using CubeCity.Generators.Pipelines;
 using CubeCity.Input;
-using CubeCity.Managers;
+using CubeCity.Services;
 using CubeCity.Systems;
 using CubeCity.Tools;
 using Leopotam.EcsLite;
@@ -20,7 +20,7 @@ public class GameSystemsBuilder
 
         var gamepadManager = new GamepadInputManager();
         var keyboardManager = new KeyboardInputManager();
-        var mouseManager = new MouseManager(gameData.Window)
+        var mouseManager = new MouseService(gameData.Window)
         {
             GamepadSensitivity = settings.GamepadSensitivity,
             MouseSensitivity = settings.MouseSensitivity
@@ -32,7 +32,7 @@ public class GameSystemsBuilder
             mouseManager, camera, gameData.Window, gameData.Time);
 
         var chunkGenerator = new ChunkGeneratorSystem(camera, settings.ChunksViewDistance,
-            new ChunkGenerator(new PerlinNoise2D(),
+            new ChunkBlockGenerator(new PerlinNoise2D(),
                 settings.Blocks, settings.GeneratingChunkThreads, gameData.GraphicsDevice));
 
         var display = new DisplayInfoSystem(gamepadManager, keyboardManager,

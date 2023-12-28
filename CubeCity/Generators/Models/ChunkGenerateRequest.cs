@@ -1,6 +1,6 @@
 ﻿using CubeCity.Tools;
 
-namespace CubeCity.Generators;
+namespace CubeCity.Generators.Models;
 
 public readonly struct ChunkGenerateRequest
 {

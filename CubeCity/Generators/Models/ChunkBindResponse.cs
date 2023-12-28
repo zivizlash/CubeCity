@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 
-namespace CubeCity.Generators;
+namespace CubeCity.Generators.Models;
 
 public readonly struct ChunkBindResponse
 {

@@ -2,9 +2,9 @@
 using System;
 using Microsoft.Xna.Framework.Input;
 
-namespace CubeCity.Managers;
+namespace CubeCity.Services;
 
-public class MouseManager
+public class MouseService
 {
     private readonly GameWindow _gameWindow;
 
@@ -17,7 +17,7 @@ public class MouseManager
 
     private int _lastX, _lastY;
 
-    public MouseManager(GameWindow gameWindow)
+    public MouseService(GameWindow gameWindow)
     {
         _gameWindow = gameWindow;
     }
@@ -53,7 +53,7 @@ public class MouseManager
             _yaw += xOffset * MouseSensitivity;
             _pitch += yOffset * MouseSensitivity;
         }
-        else 
+        else
         {
             // Обработка ввода контроллера.
             var mult = GamepadSensitivity * delta.TotalMilliseconds * 2;

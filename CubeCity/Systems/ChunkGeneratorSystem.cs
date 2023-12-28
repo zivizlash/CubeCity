@@ -1,6 +1,6 @@
 ﻿using CubeCity.Components;
 using CubeCity.GameObjects;
-using CubeCity.Generators;
+using CubeCity.Generators.Models;
 using CubeCity.Generators.Pipelines;
 using CubeCity.Tools;
 using Leopotam.EcsLite;
@@ -14,7 +14,7 @@ public class ChunkGeneratorSystem : IEcsInitSystem, IEcsRunSystem
 {
     private readonly Dictionary<Vector2Int, EcsPackedEntity> _entities;
     private readonly Camera _camera;
-    private readonly ChunkGenerator _chunkGenerator;
+    private readonly ChunkBlockGenerator _chunkGenerator;
     private readonly int _size;
 
     private EcsPool<GeneratingChunkComponent> _requestsPool = null!;
@@ -24,7 +24,7 @@ public class ChunkGeneratorSystem : IEcsInitSystem, IEcsRunSystem
 
     private Vector2Int _previousChunkPosition;
 
-    public ChunkGeneratorSystem(Camera camera, int size, ChunkGenerator chunkGenerator)
+    public ChunkGeneratorSystem(Camera camera, int size, ChunkBlockGenerator chunkGenerator)
     {
         _camera = camera;
         _size = size;

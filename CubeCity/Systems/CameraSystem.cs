@@ -1,6 +1,5 @@
 ﻿using CubeCity.GameObjects;
 using CubeCity.Input;
-using CubeCity.Managers;
 using CubeCity.Services;
 using Leopotam.EcsLite;
 using Microsoft.Xna.Framework;
@@ -13,7 +12,7 @@ public class CameraSystem : IEcsInitSystem, IEcsRunSystem
 {
     private readonly GamepadInputManager _gamepadManager;
     private readonly KeyboardInputManager _keyboardManager;
-    private readonly MouseManager _mouseManager;
+    private readonly MouseService _mouseManager;
     private readonly Camera _camera;
     private readonly GameWindow _gameWindow;
     private readonly ITime _time;
@@ -23,7 +22,7 @@ public class CameraSystem : IEcsInitSystem, IEcsRunSystem
     private const float _moveSpeed = 0.5f;
 
     public CameraSystem(GamepadInputManager gamepadManager, KeyboardInputManager keyboardManager, 
-        MouseManager mouseManager, Camera camera, GameWindow gameWindow, ITime time)
+        MouseService mouseManager, Camera camera, GameWindow gameWindow, ITime time)
     {
         _gamepadManager = gamepadManager;
         _keyboardManager = keyboardManager;
