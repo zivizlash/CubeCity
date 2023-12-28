@@ -19,31 +19,39 @@ public class DisplayInfoSystem : IEcsRunSystem
     private readonly SpriteBatch _spriteBatch;
     private readonly SpriteFont _spriteFont;
     private readonly Camera _camera;
-
+    private readonly Action _exit;
+    
     private bool _displayInformation;
 
     public DisplayInfoSystem(GamepadInputManager gamepadManager, KeyboardInputManager keyboardManager,
-        SpriteBatch spriteBatch, SpriteFont spriteFont, Camera camera)
+        SpriteBatch spriteBatch, SpriteFont spriteFont, Camera camera, Action exit)
     {
         _gamepadManager = gamepadManager;
         _keyboardManager = keyboardManager;
         _spriteBatch = spriteBatch;
         _spriteFont = spriteFont;
         _camera = camera;
+        _exit = exit;
     }
 
     public void Run(IEcsSystems systems)
     {
         // Вообще вроде как для обновления управление используется не Draw, а Update, но
 
-        if (_gamepadManager.IsButtonPressed(Buttons.Y) || _keyboardManager.IsKeyPressed(Keys.Y))
-            _displayInformation = !_displayInformation;
+        if (_gamepadManager.IsButtonPressed(Buttons.B) || _keyboardManager.IsKeyDown(Keys.Escape))
+        {
+            _exit.Invoke();
+        }
 
-        //if (keyboard.IsKeyPressed(Keys.R))
-        //    _gameServices.BlocksController.RegenerateCurrentChunk(_gameServices.Camera.Position);
+        if (_gamepadManager.IsButtonPressed(Buttons.Y) || _keyboardManager.IsKeyPressed(Keys.Y))
+        {
+            _displayInformation = !_displayInformation;
+        }
 
         if (_keyboardManager.IsKeyPressed(Keys.J))
+        {
             GC.Collect(2, GCCollectionMode.Forced, false, true);
+        }
 
         if (_displayInformation)
         {

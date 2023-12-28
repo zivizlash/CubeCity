@@ -30,6 +30,7 @@ public class ChunkGeneratorSystem : IEcsInitSystem, IEcsRunSystem
         _size = size;
         _chunkGenerator = chunkGenerator;
         _entities = new Dictionary<Vector2Int, EcsPackedEntity>(512);
+        _previousChunkPosition = new Vector2Int(int.MinValue, int.MinValue);
     }
 
     public void Init(IEcsSystems systems)
@@ -83,7 +84,7 @@ public class ChunkGeneratorSystem : IEcsInitSystem, IEcsRunSystem
     private void ForceUpdateInternal(IEcsSystems systems)
     {
         var world = systems.GetWorld();
-        var size = _size / 2;
+        var size = _size;
 
         for (int x = -size; x < size; x++)
         {

@@ -1,7 +1,17 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Leopotam.EcsLite;
+using Microsoft.Xna.Framework;
 using System;
 
 namespace CubeCity.Tools;
+
+public static class EcsSystemExtensions
+{
+    public static IEcsSystems InitChain(this IEcsSystems systems)
+    {
+        systems.Init();
+        return systems;
+    }
+}
 
 public static class BlocksTools
 {

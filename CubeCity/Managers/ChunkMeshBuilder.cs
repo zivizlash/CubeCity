@@ -79,7 +79,7 @@ public struct ChunkMeshBuilder
     private void UpdateMeshData(int x, int y, int z)
     {
         var pos = new Vector3Int(x, y, z);
-        var blockId = _blocks[pos.X, pos.Y, pos.Z];
+        var blockId = _blocks[x, y, z];
 
         for (int face = 0; face < 6; face++)
         {
@@ -107,17 +107,7 @@ public struct ChunkMeshBuilder
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool BlockExists(Vector3Int pos)
-    {
-        if (pos.X >= _blockRanks.X || pos.X < 0) return false;
-        if (pos.Y >= _blockRanks.Y || pos.Y < 0) return false;
-        if (pos.Z >= _blockRanks.Z || pos.Z < 0) return false;
-
-        return _blocks[pos.X, pos.Y, pos.Z] != 0;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool BlockExistsOrWorldBottom(Vector3Int pos)
+    private readonly bool BlockExistsOrWorldBottom(Vector3Int pos)
     {
         if (pos.X >= _blockRanks.X || pos.X < 0) return false;
         if (pos.Z >= _blockRanks.Z || pos.Z < 0) return false;
@@ -127,7 +117,7 @@ public struct ChunkMeshBuilder
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool BlockExists(int x, int y, int z)
+    private readonly bool BlockExists(int x, int y, int z)
     {
         if (x >= _blockRanks.X || x < 0) return false;
         if (y >= _blockRanks.Y || y < 0) return false;

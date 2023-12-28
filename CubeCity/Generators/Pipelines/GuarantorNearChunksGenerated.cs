@@ -80,9 +80,6 @@ public class GuarantorNearChunksGenerated
 
         chunksInfo = default;
         return false;
-
-        chunksInfo = default;
-        return false;
     }
 
     private struct NearChunkInfoInternal

@@ -3,14 +3,14 @@ using Newtonsoft.Json;
 using System;
 using System.IO;
 
-namespace CubeCity;
+namespace CubeCity.Builders;
 
 public static class GameSettingsProvider
 {
     private static GameSettings? _gameSettings;
 
-    public static GameSettings Settings => 
-        _gameSettings ??= (JsonConvert.DeserializeObject<GameSettings>(File.ReadAllText("appsettings.json")))
+    public static GameSettings Settings =>
+        _gameSettings ??= JsonConvert.DeserializeObject<GameSettings>(File.ReadAllText("appsettings.json"))
             ?? throw new InvalidOperationException("appsettings.json not found.");
 }
 
@@ -90,7 +90,7 @@ public class GameSettings
             BottomTexture = 6,
             RightTexture = 6,
             BackTexture = 6
-        }, 
+        },
         new BlockType
         { // 6
             Name = "HardRock",

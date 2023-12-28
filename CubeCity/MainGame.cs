@@ -1,9 +1,5 @@
-﻿using CubeCity.Generators.Algs;
-using CubeCity.Input;
-using CubeCity.Managers;
+﻿using CubeCity.Builders;
 using CubeCity.Services;
-using CubeCity.Systems;
-using Leopotam.EcsLite;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -16,14 +12,12 @@ public class MainGame : Game
     private readonly TimeService _timeService;
 
     private Texture2D _blocksTexture = null!;
-
     private SpriteBatch _spriteBatch = null!;
     private SpriteFont _spriteFont = null!;
 
-    private readonly EcsWorld _world;
+    private GameSystemsContainer _gameSystems = null!;
 
-    private IEcsSystems _update = null!;
-    private IEcsSystems _draw = null!;
+    private bool _disposed;
 
     public MainGame()
     {
@@ -35,11 +29,6 @@ public class MainGame : Game
         };
 
         _timeService = new TimeService();
-
-        //_gameServices = new GameServices(Window);
-        //_gameSystems = new GameSystemManager();
-
-        _world = new EcsWorld();
 
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
@@ -53,10 +42,6 @@ public class MainGame : Game
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         GraphicsDevice.SamplerStates[0] = SamplerState.PointClamp;
 
-        //_gameServices.Initialize(GraphicsDevice);
-
-        //_gameServices.BlocksController.ForceChunkGenerate(_gameServices.Camera.Position);
-
         _graphics.PreferredBackBufferWidth = 1920;
         _graphics.PreferredBackBufferHeight = 1080;
 
@@ -69,95 +54,44 @@ public class MainGame : Game
         _blocksTexture = Content.Load<Texture2D>("Textures/Blocks");
         _spriteFont = Content.Load<SpriteFont>("GameFont");
 
-        //_gameSystems.Add(new InputSystem(_gameServices));
-        //_gameSystems.Add(new MoveSystem(_gameServices, Window, Exit, v => IsMouseVisible = v));
-        //_gameSystems.Add(new ChunkSystem(_gameServices, _blocksTexture, GraphicsDevice));
-        //_gameSystems.Add(new DisplayInfoSystem(_spriteBatch, _spriteFont, _gameServices));
-
         GraphicsDevice.Textures[0] = _blocksTexture;
         GraphicsDevice.SamplerStates[0] = SamplerState.PointClamp;
 
-        GetUpdate();
+        _gameSystems = BuildSystems();
     }
 
     protected override void Update(GameTime gameTime)
     {
         _timeService.AddTime(gameTime.ElapsedGameTime);
-        //_gameSystems.Update(gameTime.ElapsedGameTime);
-
-        _update.Run();
-
+        _gameSystems.UpdateSystems.Run();
         base.Update(gameTime);
     }
     
     protected override void Draw(GameTime gameTime)
     {
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        //_gameSystems.Draw(gameTime.ElapsedGameTime);
-
-        _draw.Run();
-
+        _gameSystems.DrawSystems.Run();
         base.Draw(gameTime);
     }
 
-    private bool _disposed;
+    private GameSystemsContainer BuildSystems()
+    {
+        var builder = new GameSystemsBuilder();
+
+        var args = new GameData(_blocksTexture, _spriteBatch, _spriteFont, _graphics, 
+            _timeService, GameSettingsProvider.Settings, Window, GraphicsDevice, Exit);
+
+        return builder.Build(args);
+    }
 
     protected override void Dispose(bool disposing)
     {
         if (!_disposed)
         {
             _disposed = true;
-            _world.Destroy();
+            _gameSystems.World.Destroy();
         }
 
         base.Dispose(disposing);
-    }
-
-    private void GetUpdate()
-    {
-        var settings = GameSettingsProvider.Settings;
-
-        var gamepadManager = new GamepadInputManager();
-        var keyboardManager = new KeyboardInputManager();
-        var mouseManager = new MouseManager(Window)
-        { 
-            GamepadSensitivity = settings.GamepadSensitivity,
-            MouseSensitivity = settings.MouseSensitivity
-        };
-
-        var camera = new GameObjects.Camera();
-
-        var cameraSystem = new CameraSystem(gamepadManager, keyboardManager, 
-            mouseManager, camera, Window, _timeService);
-
-        var chunkGenerator = new ChunkGeneratorSystem(camera, settings.ChunksViewDistance,
-            new Generators.Pipelines.ChunkGenerator(new PerlinNoise2D(), 
-                settings.Blocks, settings.GeneratingChunkThreads, GraphicsDevice));
-
-        var display = new DisplayInfoSystem(gamepadManager, keyboardManager, _spriteBatch, _spriteFont, camera);
-
-        var rasterizer = new RasterizerState { CullMode = CullMode.CullClockwiseFace, MultiSampleAntiAlias = true };
-
-        var effect = new BasicEffect(GraphicsDevice)
-        {
-            TextureEnabled = true,
-            PreferPerPixelLighting = true
-        };
-
-        var render = new RenderSystem(GraphicsDevice, rasterizer, camera, effect, _blocksTexture);
-
-        _update = new EcsSystems(_world);
-
-        _update
-            .Add(cameraSystem)
-            .Add(chunkGenerator)
-            .Add(display)
-            .Init();
-
-        _draw = new EcsSystems(_world);
-
-        _draw
-            .Add(render)
-            .Init();
     }
 }
