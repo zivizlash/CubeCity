@@ -4,9 +4,9 @@ using Leopotam.EcsLite;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace CubeCity.EscSystems;
+namespace CubeCity.Systems;
 
-public class EcsRenderSystem : IEcsInitSystem, IEcsRunSystem
+public class RenderSystem : IEcsInitSystem, IEcsRunSystem
 {
     private readonly GraphicsDevice _graphicsDevice;
     private readonly RasterizerState _rasterizerState;
@@ -19,7 +19,7 @@ public class EcsRenderSystem : IEcsInitSystem, IEcsRunSystem
     private EcsPool<RenderComponent> _drawingPool = null!;
     private EcsPool<PositionComponent> _positionPool = null!;
 
-    public EcsRenderSystem(GraphicsDevice graphicsDevice, RasterizerState rasterizerState, 
+    public RenderSystem(GraphicsDevice graphicsDevice, RasterizerState rasterizerState, 
         Camera camera, BasicEffect effect, Texture2D texture)
     {
         _graphicsDevice = graphicsDevice;

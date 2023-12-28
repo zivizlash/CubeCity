@@ -1,7 +1,6 @@
-﻿using CubeCity.EscSystems;
+﻿using CubeCity.Generators.Algs;
 using CubeCity.Input;
 using CubeCity.Managers;
-using CubeCity.Models;
 using CubeCity.Services;
 using CubeCity.Systems;
 using Leopotam.EcsLite;
@@ -128,14 +127,14 @@ public class MainGame : Game
 
         var camera = new GameObjects.Camera();
 
-        var cameraSystem = new EcsCameraSystem(gamepadManager, keyboardManager, 
+        var cameraSystem = new CameraSystem(gamepadManager, keyboardManager, 
             mouseManager, camera, Window, _timeService);
 
-        var chunkGenerator = new EcsChunkGeneratorSystem(camera, settings.ChunksViewDistance,
-            new Generators.Pipelines.ChunkGenerator(new Tools.PerlinNoise2D(), 
+        var chunkGenerator = new ChunkGeneratorSystem(camera, settings.ChunksViewDistance,
+            new Generators.Pipelines.ChunkGenerator(new PerlinNoise2D(), 
                 settings.Blocks, settings.GeneratingChunkThreads, GraphicsDevice));
 
-        var display = new EcsDisplayInfoSystem(gamepadManager, keyboardManager, _spriteBatch, _spriteFont, camera);
+        var display = new DisplayInfoSystem(gamepadManager, keyboardManager, _spriteBatch, _spriteFont, camera);
 
         var rasterizer = new RasterizerState { CullMode = CullMode.CullClockwiseFace, MultiSampleAntiAlias = true };
 
@@ -145,7 +144,7 @@ public class MainGame : Game
             PreferPerPixelLighting = true
         };
 
-        var render = new EcsRenderSystem(GraphicsDevice, rasterizer, camera, effect, _blocksTexture);
+        var render = new RenderSystem(GraphicsDevice, rasterizer, camera, effect, _blocksTexture);
 
         _update = new EcsSystems(_world);
 

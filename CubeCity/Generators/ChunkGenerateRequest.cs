@@ -1,22 +1,13 @@
 ﻿using CubeCity.Tools;
 
-namespace CubeCity.Generators
+namespace CubeCity.Generators;
+
+public readonly struct ChunkGenerateRequest
 {
-    /*
-     * Оптимизация:
-     * Done: 1. Не рисовать вертексы снизу
-     * 2. Генерировать чанки вокруг отображаемых чанков
-     *    (для этого надо разделить очередь генерации и очередь привязки данных)
-     * 3. Ну и обрезать невидимые блоки
-     */
+    public Vector2Int Position { get; }
 
-    public readonly struct ChunkGenerateRequest
+    public ChunkGenerateRequest(Vector2Int position)
     {
-        public Vector2Int Position { get; }
-
-        public ChunkGenerateRequest(Vector2Int position)
-        {
-            Position = position;
-        }
+        Position = position;
     }
 }

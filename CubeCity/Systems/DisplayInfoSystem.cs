@@ -10,9 +10,9 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Runtime;
 
-namespace CubeCity.EscSystems;
+namespace CubeCity.Systems;
 
-public class EcsDisplayInfoSystem : IEcsRunSystem
+public class DisplayInfoSystem : IEcsRunSystem
 {
     private readonly GamepadInputManager _gamepadManager;
     private readonly KeyboardInputManager _keyboardManager;
@@ -22,7 +22,7 @@ public class EcsDisplayInfoSystem : IEcsRunSystem
 
     private bool _displayInformation;
 
-    public EcsDisplayInfoSystem(GamepadInputManager gamepadManager, KeyboardInputManager keyboardManager,
+    public DisplayInfoSystem(GamepadInputManager gamepadManager, KeyboardInputManager keyboardManager,
         SpriteBatch spriteBatch, SpriteFont spriteFont, Camera camera)
     {
         _gamepadManager = gamepadManager;

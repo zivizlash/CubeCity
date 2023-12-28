@@ -8,9 +8,9 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 
-namespace CubeCity.EscSystems;
+namespace CubeCity.Systems;
 
-public class EcsChunkGeneratorSystem : IEcsInitSystem, IEcsRunSystem
+public class ChunkGeneratorSystem : IEcsInitSystem, IEcsRunSystem
 {
     private readonly Dictionary<Vector2Int, EcsPackedEntity> _entities;
     private readonly Camera _camera;
@@ -24,7 +24,7 @@ public class EcsChunkGeneratorSystem : IEcsInitSystem, IEcsRunSystem
 
     private Vector2Int _previousChunkPosition;
 
-    public EcsChunkGeneratorSystem(Camera camera, int size, ChunkGenerator chunkGenerator)
+    public ChunkGeneratorSystem(Camera camera, int size, ChunkGenerator chunkGenerator)
     {
         _camera = camera;
         _size = size;

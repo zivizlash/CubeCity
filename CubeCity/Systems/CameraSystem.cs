@@ -7,9 +7,9 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
 
-namespace CubeCity.EscSystems;
+namespace CubeCity.Systems;
 
-public class EcsCameraSystem : IEcsInitSystem, IEcsRunSystem
+public class CameraSystem : IEcsInitSystem, IEcsRunSystem
 {
     private readonly GamepadInputManager _gamepadManager;
     private readonly KeyboardInputManager _keyboardManager;
@@ -22,7 +22,7 @@ public class EcsCameraSystem : IEcsInitSystem, IEcsRunSystem
     private const float _moveThreshold = 0.001f;
     private const float _moveSpeed = 0.5f;
 
-    public EcsCameraSystem(GamepadInputManager gamepadManager, KeyboardInputManager keyboardManager, 
+    public CameraSystem(GamepadInputManager gamepadManager, KeyboardInputManager keyboardManager, 
         MouseManager mouseManager, Camera camera, GameWindow gameWindow, ITime time)
     {
         _gamepadManager = gamepadManager;
