@@ -31,6 +31,8 @@ public class DisplayInfoSystem : IEcsRunSystem
         _spriteFont = spriteFont;
         _camera = camera;
         _exit = exit;
+
+        _displayInformation = true;
     }
 
     public void Run(IEcsSystems systems)

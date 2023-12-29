@@ -15,7 +15,7 @@ public class GamepadInputManager
         _previousState = default;
     }
 
-    public void UpdateGamepadState(GamePadState state)
+    public void UpdateState(GamePadState state)
     {
         _previousState = _gamepadState;
         _gamepadState = state;

@@ -1,4 +1,5 @@
 ﻿using CubeCity.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -16,10 +17,11 @@ public class GameData
     public GraphicsDevice GraphicsDevice { get; }
     public ITime Time { get; }
     public Action Exit { get; }
+    public ILoggerFactory LoggerFactory { get; }
 
     public GameData(Texture2D blocksTexture, SpriteBatch spriteBatch, SpriteFont spriteFont,
         GraphicsDeviceManager graphicsManager, ITime time, GameSettings settings,
-        GameWindow window, GraphicsDevice graphicsDevice, Action exit)
+        GameWindow window, GraphicsDevice graphicsDevice, Action exit, ILoggerFactory loggerFactory)
     {
         BlocksTexture = blocksTexture;
         SpriteBatch = spriteBatch;
@@ -30,5 +32,6 @@ public class GameData
         Window = window;
         GraphicsDevice = graphicsDevice;
         Exit = exit;
+        LoggerFactory = loggerFactory;
     }
 }

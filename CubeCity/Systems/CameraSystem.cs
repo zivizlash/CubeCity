@@ -8,7 +8,7 @@ using System;
 
 namespace CubeCity.Systems;
 
-public class CameraSystem : IEcsInitSystem, IEcsRunSystem
+public class CameraSystem : IEcsRunSystem
 {
     private readonly GamepadInputManager _gamepadManager;
     private readonly KeyboardInputManager _keyboardManager;
@@ -32,14 +32,8 @@ public class CameraSystem : IEcsInitSystem, IEcsRunSystem
         _time = time;
     }
 
-    public void Init(IEcsSystems systems)
-    {
-        UpdateStates();
-    }
-
     public void Run(IEcsSystems systems)
     {
-        UpdateStates();
         UpdateCamera();
 
         var (gamepadAccelerate, gamepadTranslation) = GetGamepadTranslation(_gamepadManager);
@@ -51,23 +45,11 @@ public class CameraSystem : IEcsInitSystem, IEcsRunSystem
         MoveCamera(_camera, translation, accelerate, _time.ElapsedTime);
     }
 
-    private void UpdateStates()
-    {
-        _gamepadManager.UpdateGamepadState(GamePad.GetState(0));
-        _keyboardManager.UpdateKeyboardState(Keyboard.GetState());
-    }
-
     private void UpdateCamera()
     {
-        var mouse = Mouse.GetState();
-        UpdateStates();
-
-        _mouseManager.IsCaptured = mouse.MiddleButton == ButtonState.Pressed;
-
         var sticks = _gamepadManager.State.ThumbSticks;
 
-        var rotation = _mouseManager.GetRotation(
-            mouse.Position, _time.ElapsedTime, sticks.Right.Y, sticks.Right.X);
+        var rotation = _mouseManager.GetRotation(_time.ElapsedTime, sticks.Right.Y, sticks.Right.X);
 
         _camera.SetClientBounds(_gameWindow.ClientBounds);
         _camera.SetCameraForward(rotation);

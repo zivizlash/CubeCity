@@ -15,7 +15,7 @@ public class KeyboardInputManager
         _previousState = default;
     }
 
-    public void UpdateKeyboardState(KeyboardState state)
+    public void UpdateState(KeyboardState state)
     {
         _previousState = _keyboardState;
         _keyboardState = state;
