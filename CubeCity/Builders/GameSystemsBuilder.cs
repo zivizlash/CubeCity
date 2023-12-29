@@ -6,6 +6,7 @@ using CubeCity.Services;
 using CubeCity.Systems;
 using CubeCity.Tools;
 using Leopotam.EcsLite;
+using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace CubeCity.Builders;
@@ -20,7 +21,7 @@ public class GameSystemsBuilder
 
         var gamepadManager = new GamepadInputManager();
         var keyboardManager = new KeyboardInputManager();
-        var mouseManager = new MouseService(gameData.Window)
+        var mouseManager = new MouseService(gameData.Window, gameData.LoggerFactory.CreateLogger<MouseService>())
         {
             GamepadSensitivity = settings.GamepadSensitivity,
             MouseSensitivity = settings.MouseSensitivity
@@ -28,15 +29,23 @@ public class GameSystemsBuilder
 
         var camera = new Camera();
 
+        var inputSystem = new InputSystem(gamepadManager, keyboardManager, mouseManager);
+
         var cameraSystem = new CameraSystem(gamepadManager, keyboardManager,
             mouseManager, camera, gameData.Window, gameData.Time);
 
-        var chunkGenerator = new ChunkGeneratorSystem(camera, settings.ChunksViewDistance,
+        var chunkSystem = new ChunkGeneratorSystem(camera, settings.ChunksViewDistance,
             new ChunkBlockGenerator(new PerlinNoise2D(),
                 settings.Blocks, settings.GeneratingChunkThreads, gameData.GraphicsDevice));
 
-        var display = new DisplayInfoSystem(gamepadManager, keyboardManager,
+        var displaySystem = new DisplayInfoSystem(gamepadManager, keyboardManager,
             gameData.SpriteBatch, gameData.SpriteFont, camera, gameData.Exit);
+
+        var spawnSystem = new SpawnSystem(camera, keyboardManager, 
+            gameData.GraphicsDevice, gameData.Settings.Blocks, 
+            gameData.LoggerFactory.CreateLogger<SpawnSystem>());
+
+        var physicsSystem = new PhysicsSystem(gameData.Time);
 
         var rasterizer = new RasterizerState
         {
@@ -50,17 +59,20 @@ public class GameSystemsBuilder
             PreferPerPixelLighting = true
         };
 
-        var render = new RenderSystem(gameData.GraphicsDevice, rasterizer,
+        var renderSystem = new RenderSystem(gameData.GraphicsDevice, rasterizer,
             camera, effect, gameData.BlocksTexture);
 
         var updateSystems = new EcsSystems(world)
+            .Add(inputSystem)
             .Add(cameraSystem)
-            .Add(chunkGenerator)
-            .Add(display)
+            .Add(spawnSystem)
+            .Add(chunkSystem)
+            .Add(physicsSystem)
+            .Add(displaySystem)
             .InitChain();
 
         var drawSystems = new EcsSystems(world)
-            .Add(render)
+            .Add(renderSystem)
             .InitChain();
 
         return new GameSystemsContainer(updateSystems, drawSystems, world);

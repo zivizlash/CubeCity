@@ -1,79 +1,97 @@
-﻿using Microsoft.Xna.Framework;
-using System;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using System;
 
 namespace CubeCity.Services;
 
 public class MouseService
 {
     private readonly GameWindow _gameWindow;
+    private readonly ILogger<MouseService> _logger;
 
     public bool IsCaptured { get; set; }
     public float MouseSensitivity { get; set; }
     public float GamepadSensitivity { get; set; }
+    public MouseState State { get; private set; }
 
     private float _yaw = 90.0f;
     private float _pitch;
 
     private int _lastX, _lastY;
 
-    public MouseService(GameWindow gameWindow)
+    private int _xOffset = 0, _yOffset = 0;
+
+    public MouseService(GameWindow gameWindow, ILogger<MouseService> logger)
     {
         _gameWindow = gameWindow;
+        _logger = logger;
     }
 
-    private static bool IsOutOfScreen(Point center, Point position, int threshold)
+    public void UpdateState(MouseState state)
     {
-        var x = Math.Abs(center.X - position.X);
-        var y = Math.Abs(center.Y - position.Y);
+        State = state;
 
-        return x > threshold || y > threshold;
+        _xOffset = state.X - _lastX;
+        _yOffset = _lastY - state.Y;
+
+        _lastX = state.X;
+        _lastY = state.Y;
+
+        IsCaptured = state.MiddleButton == ButtonState.Pressed;
     }
 
-    public Vector3 GetRotation(Point mousePosition, TimeSpan delta, float up, float right)
+    public Vector3 GetRotation(TimeSpan delta, float up, float right)
     {
-        int xOffset = mousePosition.X - _lastX;
-        int yOffset = _lastY - mousePosition.Y;
-
-        _lastX = mousePosition.X;
-        _lastY = mousePosition.Y;
-
         if (IsCaptured)
         {
-            var center = _gameWindow.ClientBounds.Center;
-            var threshold = Math.Min(_gameWindow.ClientBounds.Width, _gameWindow.ClientBounds.Height) / 4;
+            var mousePos = new Point(_lastX, _lastY);
+            var size = _gameWindow.ClientBounds.Size;
 
-            if (IsOutOfScreen(center, mousePosition, threshold))
+            var x = size.X / 2;
+            var y = size.Y / 2;
+
+            if (IsOutOfScreen(new Point(x, y), mousePos, Math.Min(x, y)))
             {
-                Mouse.SetPosition(center.X, center.Y);
-                _lastX = center.X;
-                _lastY = center.Y;
+                Mouse.SetPosition(x, y);
+                _lastX = x;
+                _lastY = y;
+                _xOffset = 0;
+                _yOffset = 0;
             }
 
-            _yaw += xOffset * MouseSensitivity;
-            _pitch += yOffset * MouseSensitivity;
+            _yaw += _xOffset * MouseSensitivity;
+            _pitch += _yOffset * MouseSensitivity;
         }
         else
         {
             // Обработка ввода контроллера.
-            var mult = GamepadSensitivity * delta.TotalMilliseconds * 2;
+            var force = GamepadSensitivity * delta.TotalMilliseconds * 2;
 
-            _yaw += (float)(right * mult);
-            _pitch += (float)(up * mult);
+            _yaw += (float)(right * force);
+            _pitch += (float)(up * force);
         }
 
-        if (_pitch > 89.0f)
-            _pitch = 89.0f;
+        _pitch = Math.Clamp(_pitch, -89.9f, 89.9f);
 
-        if (_pitch < -89.0f)
-            _pitch = -89.0f;
+        var pitchRad = MathHelper.ToRadians(_pitch);
+        var yawRad = MathHelper.ToRadians(_yaw);
 
-        Vector3 front = default;
-
-        front.X = MathF.Cos(MathHelper.ToRadians(_pitch)) * MathF.Cos(MathHelper.ToRadians(_yaw));
-        front.Y = MathF.Sin(MathHelper.ToRadians(_pitch));
-        front.Z = MathF.Cos(MathHelper.ToRadians(_pitch)) * MathF.Sin(MathHelper.ToRadians(_yaw));
+        var front = new Vector3
+        {
+            X = MathF.Cos(pitchRad) * MathF.Cos(yawRad),
+            Y = MathF.Sin(pitchRad),
+            Z = MathF.Cos(pitchRad) * MathF.Sin(yawRad)
+        };
 
         return Vector3.Normalize(front);
+    }
+
+    private static bool IsOutOfScreen(Point center, Point position, int threshold)
+    {
+        var x = Math.Abs(position.X - center.X);
+        var y = Math.Abs(position.Y - center.Y);
+
+        return x >= threshold || y >= threshold;
     }
 }

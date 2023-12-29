@@ -1,5 +1,6 @@
 ﻿using CubeCity.Builders;
 using CubeCity.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -10,6 +11,7 @@ public class MainGame : Game
 {
     private readonly GraphicsDeviceManager _graphics;
     private readonly TimeService _timeService;
+    private readonly ILoggerFactory _loggerFactory;
 
     private Texture2D _blocksTexture = null!;
     private SpriteBatch _spriteBatch = null!;
@@ -19,7 +21,7 @@ public class MainGame : Game
 
     private bool _disposed;
 
-    public MainGame()
+    public MainGame(ILoggerFactory loggerFactory)
     {
         _graphics = new GraphicsDeviceManager(this)
         {
@@ -35,6 +37,7 @@ public class MainGame : Game
         TargetElapsedTime = TimeSpan.FromSeconds(1) / 170;
         IsFixedTimeStep = true;
         Window.AllowUserResizing = true;
+        _loggerFactory = loggerFactory;
     }
 
     protected override void Initialize()
@@ -78,8 +81,8 @@ public class MainGame : Game
     {
         var builder = new GameSystemsBuilder();
 
-        var args = new GameData(_blocksTexture, _spriteBatch, _spriteFont, _graphics, 
-            _timeService, GameSettingsProvider.Settings, Window, GraphicsDevice, Exit);
+        var args = new GameData(_blocksTexture, _spriteBatch, _spriteFont, _graphics, _timeService, 
+            GameSettingsProvider.Settings, Window, GraphicsDevice, Exit, _loggerFactory);
 
         return builder.Build(args);
     }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Runtime;
 using System.Runtime.InteropServices;
 
@@ -14,9 +15,12 @@ public static class Program
         if (OperatingSystem.IsWindows())
             ConsoleTools.OpenConsole();
 
-        using var game = new MainGame();
+        using var game = new MainGame(CreateLoggerFactory());
         game.Run();
     }
+
+    private static ILoggerFactory CreateLoggerFactory() => 
+        LoggerFactory.Create(b => b.AddConsole());
 }
 
 public static class ConsoleTools
