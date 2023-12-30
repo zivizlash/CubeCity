@@ -68,11 +68,11 @@ public class GameSystemsBuilder
             .Add(spawnSystem)
             .Add(chunkSystem)
             .Add(physicsSystem)
-            .Add(displaySystem)
             .InitChain();
 
         var drawSystems = new EcsSystems(world)
             .Add(renderSystem)
+            .Add(displaySystem)
             .InitChain();
 
         return new GameSystemsContainer(updateSystems, drawSystems, world);

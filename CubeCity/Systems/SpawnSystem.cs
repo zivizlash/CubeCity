@@ -1,5 +1,6 @@
 ﻿using CubeCity.Components;
 using CubeCity.GameObjects;
+using CubeCity.Generators.Algs;
 using CubeCity.Input;
 using CubeCity.Models;
 using Leopotam.EcsLite;

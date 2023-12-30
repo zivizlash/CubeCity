@@ -23,13 +23,14 @@ public static class Program
         LoggerFactory.Create(b => b.AddConsole());
 }
 
-public static class ConsoleTools
+public static partial class ConsoleTools
 {
-    [DllImport("kernel32.dll")]
-    private static extern IntPtr GetConsoleWindow();
+    [LibraryImport("kernel32.dll")]
+    private static partial IntPtr GetConsoleWindow();
 
-    [DllImport("user32.dll")]
-    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
     public static void OpenConsole()
     {

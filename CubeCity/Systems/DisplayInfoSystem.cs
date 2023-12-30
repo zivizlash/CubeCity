@@ -37,8 +37,6 @@ public class DisplayInfoSystem : IEcsRunSystem
 
     public void Run(IEcsSystems systems)
     {
-        // Вообще вроде как для обновления управление используется не Draw, а Update, но
-
         if (_gamepadManager.IsButtonPressed(Buttons.B) || _keyboardManager.IsKeyDown(Keys.Escape))
         {
             _exit.Invoke();
