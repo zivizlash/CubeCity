@@ -8,7 +8,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CubeCity", "CubeCity\CubeCi
 		{9D46B7CA-095A-40B3-903B-38A5B4109FC2} = {9D46B7CA-095A-40B3-903B-38A5B4109FC2}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ecslite", "ecslite\ecslite\ecslite.csproj", "{9D46B7CA-095A-40B3-903B-38A5B4109FC2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ecslite", "ecslite\ecslite\ecslite.csproj", "{9D46B7CA-095A-40B3-903B-38A5B4109FC2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CubeCity.Physics", "CubeCity.Physics\CubeCity.Physics.csproj", "{C7F42C50-A5D9-4B80-BEB4-E336E147CAD5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,6 +26,10 @@ Global
 		{9D46B7CA-095A-40B3-903B-38A5B4109FC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9D46B7CA-095A-40B3-903B-38A5B4109FC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9D46B7CA-095A-40B3-903B-38A5B4109FC2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C7F42C50-A5D9-4B80-BEB4-E336E147CAD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7F42C50-A5D9-4B80-BEB4-E336E147CAD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7F42C50-A5D9-4B80-BEB4-E336E147CAD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7F42C50-A5D9-4B80-BEB4-E336E147CAD5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

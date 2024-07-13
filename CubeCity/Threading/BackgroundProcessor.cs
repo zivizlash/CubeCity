@@ -40,7 +40,8 @@ public class BackgroundProcessingExecutor
 
         var typeToProcessor = _typeToProcessor;
 
-        while (!InterlockedTools.CompareAndSwap(ref _typeToProcessor, typeToProcessor.Add(typeof(TIn), item), typeToProcessor))
+        while (!InterlockedTools.CompareAndSwap(ref _typeToProcessor, 
+            typeToProcessor.Add(typeof(TIn), item), typeToProcessor))
         {
             typeToProcessor = _typeToProcessor;
         }

@@ -1,10 +1,6 @@
 ﻿using CubeCity.Components;
-using CubeCity.Models;
 using CubeCity.Services;
-using CubeCity.Tools;
 using Leopotam.EcsLite;
-using Microsoft.Xna.Framework;
-using System.Runtime.CompilerServices;
 
 namespace CubeCity.Systems;
 

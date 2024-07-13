@@ -6,30 +6,19 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace CubeCity.Systems;
 
-public class RenderSystem : IEcsInitSystem, IEcsRunSystem
+public class RenderSystem(GraphicsDevice graphicsDevice, RasterizerState rasterizerState,
+    Camera camera, BasicEffect effect, Texture2D texture) : IEcsInitSystem, IEcsRunSystem
 {
-    private readonly GraphicsDevice _graphicsDevice;
-    private readonly RasterizerState _rasterizerState;
-    private readonly Camera _camera;
-    private readonly BasicEffect _effect;
-    private readonly Texture2D _texture;
-    private readonly Matrix _worldMatrix;
+    private readonly GraphicsDevice _graphicsDevice = graphicsDevice;
+    private readonly RasterizerState _rasterizerState = rasterizerState;
+    private readonly Camera _camera = camera;
+    private readonly BasicEffect _effect = effect;
+    private readonly Texture2D _texture = texture;
+    private readonly Matrix _worldMatrix = Matrix.CreateWorld(Vector3.Zero, Vector3.Forward, Vector3.Up);
 
     private EcsFilter _drawingFilter = null!;
     private EcsPool<RenderComponent> _drawingPool = null!;
     private EcsPool<PositionComponent> _positionPool = null!;
-
-    public RenderSystem(GraphicsDevice graphicsDevice, RasterizerState rasterizerState, 
-        Camera camera, BasicEffect effect, Texture2D texture)
-    {
-        _graphicsDevice = graphicsDevice;
-        _rasterizerState = rasterizerState;
-        _camera = camera;
-        _effect = effect;
-        _texture = texture;
-
-        _worldMatrix = Matrix.CreateWorld(Vector3.Zero, Vector3.Forward, Vector3.Up);
-    }
 
     public void Init(IEcsSystems systems)
     {
