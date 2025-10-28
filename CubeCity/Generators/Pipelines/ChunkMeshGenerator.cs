@@ -24,15 +24,15 @@ public struct ChunkMeshGenerator
     private Vector2[] _uvsBuffer;
     private int[] _trianglesBuffer;
 
-    public ChunkMeshGenerator(BlockType[] blockTypes, ushort[,,] blocks) : this()
+    public ChunkMeshGenerator(BlockType[] blockTypes, ushort[,,] blocks)
     {
         _blockTypes = blockTypes;
         _blocks = blocks;
         _blockRanks = GetBlockRanks(blocks);
 
-        _verticesBuffer = Array.Empty<Vector3>();
-        _uvsBuffer = Array.Empty<Vector2>();
-        _trianglesBuffer = Array.Empty<int>();
+        _verticesBuffer = [];
+        _uvsBuffer = [];
+        _trianglesBuffer = [];
     }
 
     public PooledMemory<TexturePositionVertices> Build()

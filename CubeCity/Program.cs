@@ -19,7 +19,7 @@ public static class Program
         game.Run();
     }
 
-    private static ILoggerFactory CreateLoggerFactory() => 
+    private static ILoggerFactory CreateLoggerFactory() =>
         LoggerFactory.Create(b => b.AddConsole());
 }
 
