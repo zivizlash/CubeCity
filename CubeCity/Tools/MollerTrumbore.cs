@@ -9,16 +9,20 @@ public readonly record struct ChunkTriangle(Vector3 P0, Vector3 P1, Vector3 P2);
 public readonly struct ChunkMetadataFactory
 {
     private readonly ushort[,,] _blocks;
+    private readonly Vector3 _inWorldChunkPos;
     private readonly Vector3Int _ranks;
     private readonly List<ChunkTriangle> _tris;
 
-    public ChunkMetadataFactory(ushort[,,] blocks)
+    public IReadOnlyList<ChunkTriangle> Triangles => _tris;
+
+    public ChunkMetadataFactory(ushort[,,] blocks, Vector3 inWorldChunkPos)
     {
         _blocks = blocks;
+        _inWorldChunkPos = inWorldChunkPos;
         _ranks = GetBlockRanks(blocks);
-        _tris = new List<ChunkTriangle>();
+        _tris = new List<ChunkTriangle>(2048);
     }
-
+    
     public ChunkMetadata Create()
     {
         for (int x = 0; x < _ranks.X; x++)
@@ -48,7 +52,16 @@ public readonly struct ChunkMetadataFactory
             // При face = 2 - это верх.
             if (!BlockExistsOrWorldBottom(pos + VoxelData.Faces[face]))
             {
-                
+                var verticeP0 = pos + VoxelData.Verts[VoxelData.Tris[face, 0]] + _inWorldChunkPos;
+                var verticeP1 = pos + VoxelData.Verts[VoxelData.Tris[face, 1]] + _inWorldChunkPos;
+                var verticeP2 = pos + VoxelData.Verts[VoxelData.Tris[face, 2]] + _inWorldChunkPos;
+                var verticeP3 = pos + VoxelData.Verts[VoxelData.Tris[face, 3]] + _inWorldChunkPos;
+
+                var t1 = new ChunkTriangle(verticeP0, verticeP1, verticeP2);
+                var t2 = new ChunkTriangle(verticeP2, verticeP1, verticeP3);
+
+                _tris.Add(t1);
+                _tris.Add(t2);
             }
         }
     }
@@ -79,12 +92,8 @@ public readonly struct ChunkMetadataFactory
     }
 }
 
-public class ChunkMetadata
-{
-    public ChunkMetadata()
-    {
-    }
-}
+public readonly record struct ChunkMetadata(ChunkTriangle[] Triangles);
+
 
 // ReSharper disable IdentifierTypo 
 public class MollerTrumbore

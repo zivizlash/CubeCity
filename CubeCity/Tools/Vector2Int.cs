@@ -42,8 +42,8 @@ public struct Vector2Int
     public static explicit operator Vector2Int(Vector3 position)
     {
         return new Vector2Int(
-            (int)Math.Round(position.X, MidpointRounding.ToPositiveInfinity),
-            (int)Math.Round(position.Z, MidpointRounding.ToPositiveInfinity));
+            (int)Math.Round(position.X, MidpointRounding.AwayFromZero),
+            (int)Math.Round(position.Z, MidpointRounding.AwayFromZero));
     }
 
     public override string ToString()

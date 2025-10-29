@@ -4,19 +4,17 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace CubeCity.Generators.Models;
 
-public readonly struct ChunkGenerateResponse
+public readonly record struct ChunkGenerateResponseResult(
+    ChunkInfo ChunkInfo,
+    VertexBuffer VertexBuffer, 
+    IndexBuffer IndexBuffer)
 {
-    public ChunkInfo ChunkInfo { get; }
-    public Vector2Int Position { get; }
-    public VertexBuffer VertexBuffer { get; }
-    public IndexBuffer IndexBuffer { get; }
-
-    public ChunkGenerateResponse(ChunkInfo chunkInfo, Vector2Int position,
-        VertexBuffer vertexBuffer, IndexBuffer indexBuffer)
+    public void Dispose()
     {
-        ChunkInfo = chunkInfo;
-        Position = position;
-        VertexBuffer = vertexBuffer;
-        IndexBuffer = indexBuffer;
+        VertexBuffer.Dispose();
+        IndexBuffer.Dispose();
+        ChunkInfo.Blocks.Dispose();
     }
 }
+
+public readonly record struct ChunkGenerateResponse(Vector2Int Position, ChunkGenerateResponseResult? Result);

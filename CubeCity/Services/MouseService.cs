@@ -8,7 +8,6 @@ namespace CubeCity.Services;
 public class MouseService
 {
     private readonly GameWindow _gameWindow;
-    private readonly ILogger<MouseService> _logger;
 
     public bool IsCaptured { get; set; }
     public float MouseSensitivity { get; set; }
@@ -22,10 +21,9 @@ public class MouseService
 
     private int _xOffset = 0, _yOffset = 0;
 
-    public MouseService(GameWindow gameWindow, ILogger<MouseService> logger)
+    public MouseService(GameWindow gameWindow)
     {
         _gameWindow = gameWindow;
-        _logger = logger;
     }
 
     public void UpdateState(MouseState state)

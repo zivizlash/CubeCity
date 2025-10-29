@@ -93,9 +93,11 @@ public struct ChunkMeshGenerator
 
                 AddTexture(_blockTypes[blockId].GetTextureId(face));
 
+                // can be reversed for counterclockwise culling
                 _trianglesBuffer[_trianglesIndex + 0] = _verticesIndex + 0;
                 _trianglesBuffer[_trianglesIndex + 1] = _verticesIndex + 1;
                 _trianglesBuffer[_trianglesIndex + 2] = _verticesIndex + 2;
+                
                 _trianglesBuffer[_trianglesIndex + 3] = _verticesIndex + 2;
                 _trianglesBuffer[_trianglesIndex + 4] = _verticesIndex + 1;
                 _trianglesBuffer[_trianglesIndex + 5] = _verticesIndex + 3;

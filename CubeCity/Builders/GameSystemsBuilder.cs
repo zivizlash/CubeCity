@@ -1,5 +1,6 @@
 ﻿using CubeCity.GameObjects;
 using CubeCity.Generators.Algs;
+using CubeCity.Generators.Chunks;
 using CubeCity.Generators.Pipelines;
 using CubeCity.Input;
 using CubeCity.Services;
@@ -21,7 +22,7 @@ public class GameSystemsBuilder
 
         var gamepadManager = new GamepadInputManager();
         var keyboardManager = new KeyboardInputManager();
-        var mouseManager = new MouseService(gameData.Window, gameData.LoggerFactory.CreateLogger<MouseService>())
+        var mouseManager = new MouseService(gameData.Window)
         {
             GamepadSensitivity = settings.GamepadSensitivity,
             MouseSensitivity = settings.MouseSensitivity
@@ -34,9 +35,16 @@ public class GameSystemsBuilder
         var cameraSystem = new CameraSystem(gamepadManager, keyboardManager,
             mouseManager, camera, gameData.Window, gameData.Time);
 
-        var chunkSystem = new ChunkGeneratorSystem(camera, settings.ChunksViewDistance,
-            new ChunkBlockGenerator(new PerlinNoise2D(),
-                settings.Blocks, settings.GeneratingChunkThreads, gameData.GraphicsDevice));
+        var chunkIsRequiredChecker = new ChunkIsRequiredChecker(settings.ChunksViewDistance + 2);
+
+        var chunkGenerator = new CompositeChunkBlocksGenerator([
+            new PerlinChunkBlocksGenerator(new PerlinNoise2D()),
+            new DiamondSquareChunkBlocksGenerator()]);
+
+        var chunkSystem = new ChunkGeneratorSystem(
+            camera, settings.ChunksViewDistance, chunkIsRequiredChecker,
+            new ChunkBlockGenerator(settings.Blocks, settings.GeneratingChunkThreads, 
+                gameData.GraphicsDevice, chunkGenerator, chunkIsRequiredChecker));
 
         var displaySystem = new DisplayInfoSystem(gamepadManager, keyboardManager,
             gameData.SpriteBatch, gameData.SpriteFont, camera, gameData.Exit);

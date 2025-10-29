@@ -5,33 +5,23 @@ using CubeCity.Generators.Pipelines;
 using CubeCity.Tools;
 using Leopotam.EcsLite;
 using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
 
 namespace CubeCity.Systems;
 
-public class ChunkGeneratorSystem : IEcsInitSystem, IEcsRunSystem
+// капец мне все это дело не нравится надо переписать красиво как нить
+public class ChunkGeneratorSystem(Camera camera, int size, 
+    ChunkIsRequiredChecker chunkIsRequiredChecker, 
+    ChunkBlockGenerator chunkGenerator) : IEcsInitSystem, IEcsRunSystem
 {
-    private readonly Dictionary<Vector2Int, EcsPackedEntity> _entities;
-    private readonly Camera _camera;
-    private readonly ChunkBlockGenerator _chunkGenerator;
-    private readonly int _size;
-
+    private readonly Dictionary<Vector2Int, EcsPackedEntity> _entities = new(512);
+    
     private EcsPool<GeneratingChunkComponent> _requestsPool = null!;
     private EcsPool<ChunkComponent> _chunksPool = null!;
     private EcsPool<RenderComponent> _renderPool = null!;
     private EcsPool<PositionComponent> _positionPool = null!;
 
-    private Vector2Int _previousChunkPosition;
-
-    public ChunkGeneratorSystem(Camera camera, int size, ChunkBlockGenerator chunkGenerator)
-    {
-        _camera = camera;
-        _size = size;
-        _chunkGenerator = chunkGenerator;
-        _entities = new Dictionary<Vector2Int, EcsPackedEntity>(512);
-        _previousChunkPosition = new Vector2Int(int.MinValue, int.MinValue);
-    }
+    private Vector2Int _playerChunkPos = new(int.MinValue, int.MinValue);
 
     public void Init(IEcsSystems systems)
     {
@@ -46,79 +36,105 @@ public class ChunkGeneratorSystem : IEcsInitSystem, IEcsRunSystem
     {
         PlaceGeneratedChunks(systems);
 
-        var chunkPos = BlocksTools.GetChunkPosByWorld(_camera.Position);
+        var playerChunkPos = BlocksTools.GetChunkPosByWorld(camera.Position);
 
-        if (chunkPos != _previousChunkPosition)
+        if (playerChunkPos != _playerChunkPos)
         {
-            _previousChunkPosition = chunkPos;
+            _playerChunkPos = playerChunkPos;
+            chunkIsRequiredChecker.Update(playerChunkPos);
             ForceUpdateInternal(systems);
         }
     }
 
     private void PlaceGeneratedChunks(IEcsSystems systems)
     {
+        while (chunkGenerator.TryGetChunk(out var chunkResponse))
+        {
+            PlaceChunk(systems, chunkResponse);
+        }
+    }
+
+    private void PlaceChunk(IEcsSystems systems, ChunkGenerateResponse chunkResponse)
+    {
         var world = systems.GetWorld();
 
-        while (_chunkGenerator.TryGetChunk(out var chunkResponse))
+        if (!_entities.TryGetValue(chunkResponse.Position, out var packedEntity))
         {
-            if (!_entities[chunkResponse.Position].Unpack(world, out var entity))
-            {
-                throw new InvalidOperationException("Can't unpack chunk.");
-            }
-
-            ref var chunk = ref _chunksPool.Add(entity);
-            chunk.Blocks = chunkResponse.ChunkInfo.Blocks;
-            chunk.Position = chunkResponse.Position;
-
-            ref var render = ref _renderPool.Add(entity);
-            render.VertexBuffer = chunkResponse.VertexBuffer;
-            render.IndexBuffer = chunkResponse.IndexBuffer;
-
-            ref var position = ref _positionPool.Add(entity);
-            position.Position = new Vector3(chunkResponse.Position.X * 16, 0, chunkResponse.Position.Y * 16);
-
-            _requestsPool.Del(entity);
+            chunkResponse.Result?.Dispose();
+            return;
         }
+
+        if (chunkResponse.Result is not ChunkGenerateResponseResult result)
+        {
+            _entities.Remove(chunkResponse.Position);
+
+            if (packedEntity.Unpack(world, out var deleteEntity))
+            {
+                world.DelEntity(deleteEntity);
+            }
+            return;
+        }
+
+        var entity = packedEntity.Unpack(world);
+
+        if (!chunkIsRequiredChecker.IsRequired(chunkResponse.Position))
+        {
+            result.Dispose();
+            world.DelEntity(entity);
+            _entities.Remove(chunkResponse.Position);
+            return;
+        }
+
+        if (_chunksPool.Has(entity))
+        {
+            result.Dispose();
+            return;
+        }
+
+        ref var chunk = ref _chunksPool.Add(entity);
+        chunk.Blocks = result.ChunkInfo.Blocks;
+        chunk.Position = chunkResponse.Position;
+
+        ref var render = ref _renderPool.Add(entity);
+        render.VertexBuffer = result.VertexBuffer;
+        render.IndexBuffer = result.IndexBuffer;
+
+        ref var position = ref _positionPool.Add(entity);
+        position.Position = new Vector3(
+            chunkResponse.Position.X * 16, 
+            0, 
+            chunkResponse.Position.Y * 16);
+
+        _requestsPool.Del(entity);
     }
 
     private void ForceUpdateInternal(IEcsSystems systems)
     {
         var world = systems.GetWorld();
-        var size = _size;
+
+        foreach (var (position, packed) in _entities)
+        {
+            if (!chunkIsRequiredChecker.IsRequired(position))
+            {
+                world.DelEntity(packed.Unpack(world));
+                _entities.Remove(position);
+            }
+        }
 
         for (int x = -size; x < size; x++)
         {
             for (int z = -size; z < size; z++)
             {
-                var deltaChunkPos = _previousChunkPosition + new Vector2Int(x, z);
+                var chunkPos = _playerChunkPos + new Vector2Int(x, z);
 
-                if (!_entities.ContainsKey(deltaChunkPos))
+                if (!_entities.ContainsKey(chunkPos))
                 {
                     var entity = world.NewEntity();
                     ref var request = ref _requestsPool.Add(entity);
-                    request.Position = deltaChunkPos;
+                    request.Position = chunkPos;
 
-                    _entities.Add(deltaChunkPos, world.PackEntity(entity));
-                    _chunkGenerator.AddGenerationRequest(new ChunkGenerateRequest(deltaChunkPos));
-                }
-            }
-        }
-
-        foreach (var (position, packed) in _entities)
-        {
-            if (!BlocksTools.IsInRange(_previousChunkPosition, position, _size + 4))
-            {
-                if (packed.Unpack(world, out var entity))
-                {
-                    if (_renderPool.Has(entity))
-                    {
-                        world.DelEntity(entity);
-                        _entities.Remove(position);
-                    }
-                }
-                else
-                {
-                    throw new InvalidOperationException("Chunk already removed.");
+                    _entities.Add(chunkPos, world.PackEntity(entity));
+                    chunkGenerator.AddGenerationRequest(new ChunkGenerateRequest(chunkPos));
                 }
             }
         }

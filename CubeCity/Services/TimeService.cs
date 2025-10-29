@@ -13,5 +13,4 @@ public class TimeService : ITime
         Time += elapsedTime;
         ElapsedTime = elapsedTime;
     }
-
 }
