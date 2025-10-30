@@ -10,7 +10,7 @@ using System.Threading.Tasks.Dataflow;
 
 namespace CubeCity.Generators.Pipelines;
 
-public class ChunkBlockGenerator
+public class ChunkGenerator
 {
     private readonly ConcurrentQueue<ChunkGenerateResponse> _responses;
     private readonly ActionBlock<ChunkGenerateRequest> _requests;
@@ -21,7 +21,7 @@ public class ChunkBlockGenerator
     private readonly IChunkBlocksGenerator _chunkGenerator;
     private readonly IChunkIsRequiredChecker _chunkIsRequiredChecker;
 
-    public ChunkBlockGenerator(BlockType[] blockTypes, 
+    public ChunkGenerator(BlockType[] blockTypes, 
         int generatingChunkThreads, GraphicsDevice graphicsDevice, 
         IChunkBlocksGenerator chunkGenerator, IChunkIsRequiredChecker chunkIsRequiredChecker)
     {

@@ -6,6 +6,7 @@ using CubeCity.Input;
 using CubeCity.Services;
 using CubeCity.Systems;
 using CubeCity.Systems.Utils;
+using CubeCity.Threading;
 using CubeCity.Tools;
 using Leopotam.EcsLite;
 using Microsoft.Extensions.Logging;
@@ -29,9 +30,11 @@ public class GameSystemsBuilder
             MouseSensitivity = settings.MouseSensitivity
         };
 
+        var backgroundManager = new BackgroundManager();
+
         var inputSystem = CreateInputSystem(gamepadManager, keyboardManager, mouseManager);
         var cameraSystem = CreateCameraSystem(gameData, camera, gamepadManager, keyboardManager, mouseManager);
-        var chunkSystem = CreateChunkSystem(gameData, world, settings, camera);
+        var (playerLoaderSystem, chunkSystem) = CreateChunkSystem(gameData, world, settings, camera, backgroundManager, gameData.LoggerFactory);
         var displaySystem = CreateDisplayInfoSystem(gameData, camera, gamepadManager, keyboardManager);
         var spawnSystem = CreateSpawnSystem(world, gameData, camera, keyboardManager);
         var physicsSystem = CreatePhysicsSystem(world, gameData);
@@ -41,6 +44,7 @@ public class GameSystemsBuilder
             .Add(inputSystem)
             .Add(cameraSystem)
             .Add(spawnSystem)
+            .Add(playerLoaderSystem)
             .Add(chunkSystem)
             .Add(physicsSystem)
             .InitChain();
@@ -102,20 +106,31 @@ public class GameSystemsBuilder
         return renderSystem;
     }
 
-    private static ChunkGeneratorSystem CreateChunkSystem(
-        GameData gameData, EcsWorld world, GameSettings settings, Camera camera)
+    private static (ChunkPlayerLoaderSystem, ChunkLoaderSystem) CreateChunkSystem(
+        GameData gameData, EcsWorld world, GameSettings settings, Camera camera,
+        BackgroundManager backgroundManager, ILoggerFactory loggerFactory)
     {
-        var chunkIsRequiredChecker = new ChunkIsRequiredChecker(settings.ChunksViewDistance + 2);
+        var chunkIsRequiredChecker = new ChunkIsRequiredChecker(
+            settings.ChunksViewDistance + 2, settings.ChunksViewDistance);
 
-        var chunkGenerator = new CompositeChunkBlocksGenerator([
+        var chunkBlockGenerator = new CompositeChunkBlocksGenerator([
             new PerlinChunkBlocksGenerator(new PerlinNoise2D()),
             new DiamondSquareChunkBlocksGenerator()]);
 
-        var chunkSystem = new ChunkGeneratorSystem(
-            world, camera, settings.ChunksViewDistance, chunkIsRequiredChecker,
-            new ChunkBlockGenerator(settings.Blocks, settings.GeneratingChunkThreads,
-                gameData.GraphicsDevice, chunkGenerator, chunkIsRequiredChecker));
+        var chunkGenerator = new ChunkGenerator(settings.Blocks, settings.GeneratingChunkThreads,
+                gameData.GraphicsDevice, chunkBlockGenerator, chunkIsRequiredChecker);
 
-        return chunkSystem;
+        var chunkLoaderLogger = loggerFactory.CreateLogger<ChunkLoaderSystem>();
+        var playerLoaderLogger = loggerFactory.CreateLogger<ChunkPlayerLoaderSystem>();
+
+        var playerLoader = new ChunkPlayerLoaderSystem(world, camera, chunkIsRequiredChecker, playerLoaderLogger);
+        var chunkLoader = new ChunkLoaderSystem(world, chunkGenerator, backgroundManager, chunkLoaderLogger);
+
+        return (playerLoader, chunkLoader);
+        
+        //var chunkSystem = new ChunkGeneratorSystem(world, camera, 
+        //    settings.ChunksViewDistance, chunkIsRequiredChecker, chunkGenerator);
+
+        //return chunkSystem;
     }
 }
