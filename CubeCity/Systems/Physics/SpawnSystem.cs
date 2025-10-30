@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace CubeCity.Systems;
+namespace CubeCity.Systems.Physics;
 
 public class SpawnSystem(EcsWorld world, Camera camera, KeyboardInputManager keyboardManager,
     GraphicsDevice graphicsDevice, BlockType[] blockTypes, ILogger<SpawnSystem> logger) 

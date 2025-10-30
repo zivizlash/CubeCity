@@ -1,7 +1,7 @@
 ﻿using CubeCity.Tools;
 using System;
 
-namespace CubeCity.Systems.Utils;
+namespace CubeCity.Services;
 
 public class ChunkIsRequiredChecker : IChunkIsRequiredChecker
 {

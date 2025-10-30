@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Runtime;
 
-namespace CubeCity.Systems;
+namespace CubeCity.Systems.Render;
 
 public class DisplayInfoSystem(GamepadInputManager gamepadManager, KeyboardInputManager keyboardManager,
     SpriteBatch spriteBatch, SpriteFont spriteFont, Camera camera, Action exit) : IEcsRunSystem

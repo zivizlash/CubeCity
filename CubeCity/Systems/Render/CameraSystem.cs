@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System;
 
-namespace CubeCity.Systems;
+namespace CubeCity.Systems.Render;
 
 public class CameraSystem(GamepadInputManager gamepadManager, KeyboardInputManager keyboardManager,
     MouseService mouseManager, Camera camera, GameWindow gameWindow, ITime time) : IEcsRunSystem

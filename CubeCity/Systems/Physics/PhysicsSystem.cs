@@ -2,7 +2,7 @@
 using CubeCity.Services;
 using Leopotam.EcsLite;
 
-namespace CubeCity.Systems;
+namespace CubeCity.Systems.Physics;
 
 public class PhysicsSystem(EcsWorld world, ITime time) : IEcsRunSystem
 {

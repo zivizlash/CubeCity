@@ -4,8 +4,10 @@ using CubeCity.Generators.Chunks;
 using CubeCity.Generators.Pipelines;
 using CubeCity.Input;
 using CubeCity.Services;
-using CubeCity.Systems;
-using CubeCity.Systems.Utils;
+using CubeCity.Systems.Chunks;
+using CubeCity.Systems.Input;
+using CubeCity.Systems.Physics;
+using CubeCity.Systems.Render;
 using CubeCity.Threading;
 using CubeCity.Tools;
 using Leopotam.EcsLite;
@@ -106,31 +108,24 @@ public class GameSystemsBuilder
         return renderSystem;
     }
 
-    private static (ChunkPlayerLoaderSystem, ChunkLoaderSystem) CreateChunkSystem(
+    private static (ChunkPlayerAroundLoaderSystem, ChunkGeneratorSystem) CreateChunkSystem(
         GameData gameData, EcsWorld world, GameSettings settings, Camera camera,
         BackgroundManager backgroundManager, ILoggerFactory loggerFactory)
     {
         var chunkIsRequiredChecker = new ChunkIsRequiredChecker(
-            settings.ChunksViewDistance + 2, settings.ChunksViewDistance);
+            settings.ChunksUnloadDistance, settings.ChunksViewDistance);
 
         var chunkBlockGenerator = new CompositeChunkBlocksGenerator([
             new PerlinChunkBlocksGenerator(new PerlinNoise2D()),
             new DiamondSquareChunkBlocksGenerator()]);
 
-        var chunkGenerator = new ChunkGenerator(settings.Blocks, settings.GeneratingChunkThreads,
-                gameData.GraphicsDevice, chunkBlockGenerator, chunkIsRequiredChecker);
+        var chunkGenerator = new ChunkGenerator(settings.Blocks, gameData.GraphicsDevice, chunkBlockGenerator);
 
-        var chunkLoaderLogger = loggerFactory.CreateLogger<ChunkLoaderSystem>();
-        var playerLoaderLogger = loggerFactory.CreateLogger<ChunkPlayerLoaderSystem>();
+        var chunkLoaderLogger = loggerFactory.CreateLogger<ChunkGeneratorSystem>();
 
-        var playerLoader = new ChunkPlayerLoaderSystem(world, camera, chunkIsRequiredChecker, playerLoaderLogger);
-        var chunkLoader = new ChunkLoaderSystem(world, chunkGenerator, backgroundManager, chunkLoaderLogger);
+        var playerLoader = new ChunkPlayerAroundLoaderSystem(world, camera, chunkIsRequiredChecker);
+        var chunkLoader = new ChunkGeneratorSystem(world, chunkGenerator, backgroundManager, chunkLoaderLogger);
 
         return (playerLoader, chunkLoader);
-        
-        //var chunkSystem = new ChunkGeneratorSystem(world, camera, 
-        //    settings.ChunksViewDistance, chunkIsRequiredChecker, chunkGenerator);
-
-        //return chunkSystem;
     }
 }

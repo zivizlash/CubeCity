@@ -17,6 +17,7 @@ public static class GameSettingsProvider
 public class GameSettings
 {
     public int ChunksViewDistance { get; set; } = 12;
+    public int ChunksUnloadDistance { get; set; } = 14;
 
     public float MouseSensitivity { get; set; } = 0.1f;
     public float GamepadSensitivity { get; set; } = 0.2f;

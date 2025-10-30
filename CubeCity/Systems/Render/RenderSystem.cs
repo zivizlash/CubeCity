@@ -4,7 +4,7 @@ using Leopotam.EcsLite;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace CubeCity.Systems;
+namespace CubeCity.Systems.Render;
 
 public class RenderSystem(EcsWorld world, GraphicsDevice graphicsDevice, RasterizerState rasterizerState,
     Camera camera, BasicEffect effect, Texture2D texture) : IEcsRunSystem

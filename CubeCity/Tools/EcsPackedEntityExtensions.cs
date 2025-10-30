@@ -1,8 +1,8 @@
-﻿using CubeCity.Systems.Utils;
+﻿using CubeCity.Tools;
 using Leopotam.EcsLite;
 using System;
 
-namespace CubeCity.Systems.Utils;
+namespace CubeCity.Tools;
 
 public static class EcsPackedEntityExtensions
 {

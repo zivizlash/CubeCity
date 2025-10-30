@@ -3,7 +3,7 @@ using CubeCity.Services;
 using Leopotam.EcsLite;
 using Microsoft.Xna.Framework.Input;
 
-namespace CubeCity.Systems;
+namespace CubeCity.Systems.Input;
 
 public class InputSystem(GamepadInputManager gamepadManager, KeyboardInputManager keyboardManager,
     MouseService mouseService) : IEcsRunSystem
