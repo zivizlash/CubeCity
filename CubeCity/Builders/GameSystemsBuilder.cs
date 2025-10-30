@@ -18,8 +18,8 @@ public class GameSystemsBuilder
     public GameSystemsContainer Build(GameData gameData)
     {
         var world = new EcsWorld();
-
         var settings = GameSettingsProvider.Settings;
+        var camera = new Camera();
 
         var gamepadManager = new GamepadInputManager();
         var keyboardManager = new KeyboardInputManager();
@@ -29,47 +29,13 @@ public class GameSystemsBuilder
             MouseSensitivity = settings.MouseSensitivity
         };
 
-        var camera = new Camera();
-
-        var inputSystem = new InputSystem(gamepadManager, keyboardManager, mouseManager);
-
-        var cameraSystem = new CameraSystem(gamepadManager, keyboardManager,
-            mouseManager, camera, gameData.Window, gameData.Time);
-
-        var chunkIsRequiredChecker = new ChunkIsRequiredChecker(settings.ChunksViewDistance + 2);
-
-        var chunkGenerator = new CompositeChunkBlocksGenerator([
-            new PerlinChunkBlocksGenerator(new PerlinNoise2D()),
-            new DiamondSquareChunkBlocksGenerator()]);
-
-        var chunkSystem = new ChunkGeneratorSystem(
-            world, camera, settings.ChunksViewDistance, chunkIsRequiredChecker,
-            new ChunkBlockGenerator(settings.Blocks, settings.GeneratingChunkThreads, 
-                gameData.GraphicsDevice, chunkGenerator, chunkIsRequiredChecker));
-
-        var displaySystem = new DisplayInfoSystem(gamepadManager, keyboardManager,
-            gameData.SpriteBatch, gameData.SpriteFont, camera, gameData.Exit);
-
-        var spawnSystem = new SpawnSystem(camera, keyboardManager, 
-            gameData.GraphicsDevice, gameData.Settings.Blocks, 
-            gameData.LoggerFactory.CreateLogger<SpawnSystem>());
-
-        var physicsSystem = new PhysicsSystem(gameData.Time);
-
-        var rasterizer = new RasterizerState
-        {
-            CullMode = CullMode.CullClockwiseFace,
-            MultiSampleAntiAlias = true
-        };
-
-        var effect = new BasicEffect(gameData.GraphicsDevice)
-        {
-            TextureEnabled = true,
-            PreferPerPixelLighting = true
-        };
-
-        var renderSystem = new RenderSystem(gameData.GraphicsDevice, rasterizer,
-            camera, effect, gameData.BlocksTexture);
+        var inputSystem = CreateInputSystem(gamepadManager, keyboardManager, mouseManager);
+        var cameraSystem = CreateCameraSystem(gameData, camera, gamepadManager, keyboardManager, mouseManager);
+        var chunkSystem = CreateChunkSystem(gameData, world, settings, camera);
+        var displaySystem = CreateDisplayInfoSystem(gameData, camera, gamepadManager, keyboardManager);
+        var spawnSystem = CreateSpawnSystem(world, gameData, camera, keyboardManager);
+        var physicsSystem = CreatePhysicsSystem(world, gameData);
+        var renderSystem = CreateRenderSystem(world, gameData, camera);
 
         var updateSystems = new EcsSystems(world)
             .Add(inputSystem)
@@ -85,5 +51,71 @@ public class GameSystemsBuilder
             .InitChain();
 
         return new GameSystemsContainer(updateSystems, drawSystems, world);
+    }
+
+    private static InputSystem CreateInputSystem(GamepadInputManager gamepadManager, KeyboardInputManager keyboardManager, MouseService mouseManager)
+    {
+        return new InputSystem(gamepadManager, keyboardManager, mouseManager);
+    }
+
+    private static CameraSystem CreateCameraSystem(GameData gameData, Camera camera, GamepadInputManager gamepadManager, KeyboardInputManager keyboardManager, MouseService mouseManager)
+    {
+        return new CameraSystem(gamepadManager, keyboardManager,
+            mouseManager, camera, gameData.Window, gameData.Time);
+    }
+
+    private static DisplayInfoSystem CreateDisplayInfoSystem(GameData gameData, Camera camera, GamepadInputManager gamepadManager, KeyboardInputManager keyboardManager)
+    {
+        return new DisplayInfoSystem(gamepadManager, keyboardManager,
+            gameData.SpriteBatch, gameData.SpriteFont, camera, gameData.Exit);
+    }
+
+    private static SpawnSystem CreateSpawnSystem(EcsWorld world, GameData gameData, Camera camera, KeyboardInputManager keyboardManager)
+    {
+        return new SpawnSystem(world, camera, keyboardManager,
+            gameData.GraphicsDevice, gameData.Settings.Blocks,
+            gameData.LoggerFactory.CreateLogger<SpawnSystem>());
+    }
+
+    private static PhysicsSystem CreatePhysicsSystem(EcsWorld world, GameData gameData)
+    {
+        return new PhysicsSystem(world, gameData.Time);
+    }
+
+    private static RenderSystem CreateRenderSystem(EcsWorld world, GameData gameData, Camera camera)
+    {
+        var rasterizer = new RasterizerState
+        {
+            CullMode = CullMode.CullClockwiseFace,
+            MultiSampleAntiAlias = true
+        };
+
+        var effect = new BasicEffect(gameData.GraphicsDevice)
+        {
+            TextureEnabled = true,
+            PreferPerPixelLighting = true
+        };
+
+        var renderSystem = new RenderSystem(world, gameData.GraphicsDevice, rasterizer,
+            camera, effect, gameData.BlocksTexture);
+
+        return renderSystem;
+    }
+
+    private static ChunkGeneratorSystem CreateChunkSystem(
+        GameData gameData, EcsWorld world, GameSettings settings, Camera camera)
+    {
+        var chunkIsRequiredChecker = new ChunkIsRequiredChecker(settings.ChunksViewDistance + 2);
+
+        var chunkGenerator = new CompositeChunkBlocksGenerator([
+            new PerlinChunkBlocksGenerator(new PerlinNoise2D()),
+            new DiamondSquareChunkBlocksGenerator()]);
+
+        var chunkSystem = new ChunkGeneratorSystem(
+            world, camera, settings.ChunksViewDistance, chunkIsRequiredChecker,
+            new ChunkBlockGenerator(settings.Blocks, settings.GeneratingChunkThreads,
+                gameData.GraphicsDevice, chunkGenerator, chunkIsRequiredChecker));
+
+        return chunkSystem;
     }
 }

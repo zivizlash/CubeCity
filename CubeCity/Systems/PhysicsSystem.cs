@@ -1,42 +1,22 @@
 ﻿using CubeCity.Components;
-using CubeCity.Models;
 using CubeCity.Services;
-using CubeCity.Tools;
 using Leopotam.EcsLite;
-using Microsoft.Xna.Framework;
-using System.Runtime.CompilerServices;
 
 namespace CubeCity.Systems;
 
-public class PhysicsSystem : IEcsInitSystem, IEcsRunSystem
+public class PhysicsSystem(EcsWorld world, ITime time) : IEcsRunSystem
 {
-    private readonly ITime _time;
-
-    private EcsPool<PhysicsComponent> _physicsPool = null!;
-    private EcsPool<PositionComponent> _positionPool = null!;
-    private EcsFilter _physicsFilter = null!;
+    private readonly EcsPool<PhysicsComponent> _physicsPool = world.GetPool<PhysicsComponent>();
+    private readonly EcsPool<PositionComponent> _positionPool = world.GetPool<PositionComponent>();
+    private readonly EcsFilter _physicsFilter = world.Filter<PhysicsComponent>().Inc<PositionComponent>().End();
 
     private const float _gravity = 0.27f;
     private const float _ground = 10f;
     private const float _reduce = 0.999f;
 
-    public PhysicsSystem(ITime time)
-    {
-        _time = time;
-    }
-
-    public void Init(IEcsSystems systems)
-    {
-        var world = systems.GetWorld();
-
-        _physicsPool = world.GetPool<PhysicsComponent>();
-        _positionPool = world.GetPool<PositionComponent>();
-        _physicsFilter = world.Filter<PhysicsComponent>().Inc<PositionComponent>().End();
-    }
-
     public void Run(IEcsSystems systems)
     {
-        var delta = _time.Delta;
+        var delta = time.Delta;
 
         foreach (var entity in _physicsFilter)
         {

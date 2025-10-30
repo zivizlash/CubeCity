@@ -5,24 +5,13 @@ using Microsoft.Xna.Framework.Input;
 
 namespace CubeCity.Systems;
 
-public class InputSystem : IEcsRunSystem
+public class InputSystem(GamepadInputManager gamepadManager, KeyboardInputManager keyboardManager,
+    MouseService mouseService) : IEcsRunSystem
 {
-    private readonly GamepadInputManager _gamepadManager;
-    private readonly KeyboardInputManager _keyboardManager;
-    private readonly MouseService _mouseService;
-
-    public InputSystem(GamepadInputManager gamepadManager, KeyboardInputManager keyboardManager,
-        MouseService mouseService)
-    {
-        _gamepadManager = gamepadManager;
-        _keyboardManager = keyboardManager;
-        _mouseService = mouseService;
-    }
-
     public void Run(IEcsSystems systems)
     {
-        _gamepadManager.UpdateState(GamePad.GetState(0));
-        _keyboardManager.UpdateState(Keyboard.GetState());
-        _mouseService.UpdateState(Mouse.GetState());
+        gamepadManager.UpdateState(GamePad.GetState(0));
+        keyboardManager.UpdateState(Keyboard.GetState());
+        mouseService.UpdateState(Mouse.GetState());
     }
 }

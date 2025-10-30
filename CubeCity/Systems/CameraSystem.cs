@@ -8,51 +8,34 @@ using System;
 
 namespace CubeCity.Systems;
 
-public class CameraSystem : IEcsRunSystem
+public class CameraSystem(GamepadInputManager gamepadManager, KeyboardInputManager keyboardManager,
+    MouseService mouseManager, Camera camera, GameWindow gameWindow, ITime time) : IEcsRunSystem
 {
-    private readonly GamepadInputManager _gamepadManager;
-    private readonly KeyboardInputManager _keyboardManager;
-    private readonly MouseService _mouseManager;
-    private readonly Camera _camera;
-    private readonly GameWindow _gameWindow;
-    private readonly ITime _time;
-
     private const float _controllerThreshold = 0.001f;
     private const float _moveThreshold = 0.001f;
     private const float _moveSpeed = 0.5f;
-
-    public CameraSystem(GamepadInputManager gamepadManager, KeyboardInputManager keyboardManager, 
-        MouseService mouseManager, Camera camera, GameWindow gameWindow, ITime time)
-    {
-        _gamepadManager = gamepadManager;
-        _keyboardManager = keyboardManager;
-        _mouseManager = mouseManager;
-        _camera = camera;
-        _gameWindow = gameWindow;
-        _time = time;
-    }
 
     public void Run(IEcsSystems systems)
     {
         UpdateCamera();
 
-        var (gamepadAccelerate, gamepadTranslation) = GetGamepadTranslation(_gamepadManager);
-        var (keyboardAccelerate, keyboardTranslation) = GetKeyboardTranslation(_keyboardManager);
+        var (gamepadAccelerate, gamepadTranslation) = GetGamepadTranslation(gamepadManager);
+        var (keyboardAccelerate, keyboardTranslation) = GetKeyboardTranslation(keyboardManager);
 
         var translation = gamepadTranslation + keyboardTranslation;
         var accelerate = gamepadAccelerate + keyboardAccelerate;
 
-        MoveCamera(_camera, translation, accelerate, _time.ElapsedTime);
+        MoveCamera(camera, translation, accelerate, time.ElapsedTime);
     }
 
     private void UpdateCamera()
     {
-        var sticks = _gamepadManager.State.ThumbSticks;
+        var sticks = gamepadManager.State.ThumbSticks;
 
-        var rotation = _mouseManager.GetRotation(_time.ElapsedTime, sticks.Right.Y, sticks.Right.X);
+        var rotation = mouseManager.GetRotation(time.ElapsedTime, sticks.Right.Y, sticks.Right.X);
 
-        _camera.SetClientBounds(_gameWindow.ClientBounds);
-        _camera.SetCameraForward(rotation);
+        camera.SetClientBounds(gameWindow.ClientBounds);
+        camera.SetCameraForward(rotation);
     }
 
     private static (float, Vector3) GetKeyboardTranslation(KeyboardInputManager keyboard)
