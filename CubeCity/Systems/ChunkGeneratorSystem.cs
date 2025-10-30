@@ -2,6 +2,7 @@
 using CubeCity.GameObjects;
 using CubeCity.Generators.Models;
 using CubeCity.Generators.Pipelines;
+using CubeCity.Systems.Utils;
 using CubeCity.Tools;
 using Leopotam.EcsLite;
 using Microsoft.Xna.Framework;
@@ -10,31 +11,21 @@ using System.Collections.Generic;
 namespace CubeCity.Systems;
 
 // капец мне все это дело не нравится надо переписать красиво как нить
-public class ChunkGeneratorSystem(Camera camera, int size, 
+public class ChunkGeneratorSystem(EcsWorld world, Camera camera, int size, 
     ChunkIsRequiredChecker chunkIsRequiredChecker, 
-    ChunkBlockGenerator chunkGenerator) : IEcsInitSystem, IEcsRunSystem
+    ChunkBlockGenerator chunkGenerator) : IEcsRunSystem
 {
-    private readonly Dictionary<Vector2Int, EcsPackedEntity> _entities = new(512);
-    
-    private EcsPool<GeneratingChunkComponent> _requestsPool = null!;
-    private EcsPool<ChunkComponent> _chunksPool = null!;
-    private EcsPool<RenderComponent> _renderPool = null!;
-    private EcsPool<PositionComponent> _positionPool = null!;
+    private readonly Dictionary<Vector2Int, EcsPackedEntity> _chunkPosToEntity = new(512);
+    private readonly EcsPool<ChunkRequestComponent> _requestsPool = world.GetPool<ChunkRequestComponent>();
+    private readonly EcsPool<ChunkComponent> _chunksPool = world.GetPool<ChunkComponent>();
+    private readonly EcsPool<RenderComponent> _renderPool = world.GetPool<RenderComponent>();
+    private readonly EcsPool<PositionComponent> _positionPool = world.GetPool<PositionComponent>();
 
     private Vector2Int _playerChunkPos = new(int.MinValue, int.MinValue);
 
-    public void Init(IEcsSystems systems)
-    {
-        var world = systems.GetWorld();
-        _requestsPool = world.GetPool<GeneratingChunkComponent>();
-        _chunksPool = world.GetPool<ChunkComponent>();
-        _renderPool = world.GetPool<RenderComponent>();
-        _positionPool = world.GetPool<PositionComponent>();
-    }
-
     public void Run(IEcsSystems systems)
     {
-        PlaceGeneratedChunks(systems);
+        PlaceGeneratedChunks();
 
         var playerChunkPos = BlocksTools.GetChunkPosByWorld(camera.Position);
 
@@ -42,23 +33,21 @@ public class ChunkGeneratorSystem(Camera camera, int size,
         {
             _playerChunkPos = playerChunkPos;
             chunkIsRequiredChecker.Update(playerChunkPos);
-            ForceUpdateInternal(systems);
+            ForceUpdateInternal();
         }
     }
 
-    private void PlaceGeneratedChunks(IEcsSystems systems)
+    private void PlaceGeneratedChunks()
     {
         while (chunkGenerator.TryGetChunk(out var chunkResponse))
         {
-            PlaceChunk(systems, chunkResponse);
+            PlaceChunk(chunkResponse);
         }
     }
 
-    private void PlaceChunk(IEcsSystems systems, ChunkGenerateResponse chunkResponse)
+    private void PlaceChunk(ChunkGenerateResponse chunkResponse)
     {
-        var world = systems.GetWorld();
-
-        if (!_entities.TryGetValue(chunkResponse.Position, out var packedEntity))
+        if (!_chunkPosToEntity.TryGetValue(chunkResponse.Position, out var packedEntity))
         {
             chunkResponse.Result?.Dispose();
             return;
@@ -66,7 +55,7 @@ public class ChunkGeneratorSystem(Camera camera, int size,
 
         if (chunkResponse.Result is not ChunkGenerateResponseResult result)
         {
-            _entities.Remove(chunkResponse.Position);
+            _chunkPosToEntity.Remove(chunkResponse.Position);
 
             if (packedEntity.Unpack(world, out var deleteEntity))
             {
@@ -81,7 +70,7 @@ public class ChunkGeneratorSystem(Camera camera, int size,
         {
             result.Dispose();
             world.DelEntity(entity);
-            _entities.Remove(chunkResponse.Position);
+            _chunkPosToEntity.Remove(chunkResponse.Position);
             return;
         }
 
@@ -108,16 +97,14 @@ public class ChunkGeneratorSystem(Camera camera, int size,
         _requestsPool.Del(entity);
     }
 
-    private void ForceUpdateInternal(IEcsSystems systems)
+    private void ForceUpdateInternal()
     {
-        var world = systems.GetWorld();
-
-        foreach (var (position, packed) in _entities)
+        foreach (var (position, packed) in _chunkPosToEntity)
         {
             if (!chunkIsRequiredChecker.IsRequired(position))
             {
                 world.DelEntity(packed.Unpack(world));
-                _entities.Remove(position);
+                _chunkPosToEntity.Remove(position);
             }
         }
 
@@ -127,13 +114,13 @@ public class ChunkGeneratorSystem(Camera camera, int size,
             {
                 var chunkPos = _playerChunkPos + new Vector2Int(x, z);
 
-                if (!_entities.ContainsKey(chunkPos))
+                if (!_chunkPosToEntity.ContainsKey(chunkPos))
                 {
                     var entity = world.NewEntity();
                     ref var request = ref _requestsPool.Add(entity);
                     request.Position = chunkPos;
 
-                    _entities.Add(chunkPos, world.PackEntity(entity));
+                    _chunkPosToEntity.Add(chunkPos, world.PackEntity(entity));
                     chunkGenerator.AddGenerationRequest(new ChunkGenerateRequest(chunkPos));
                 }
             }

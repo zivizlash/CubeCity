@@ -1,7 +1,7 @@
 ﻿using CubeCity.Tools;
 using System;
 
-namespace CubeCity.Systems;
+namespace CubeCity.Systems.Utils;
 
 public record ChunkIsRequiredChecker(int RemoveRange) : IChunkIsRequiredChecker
 {

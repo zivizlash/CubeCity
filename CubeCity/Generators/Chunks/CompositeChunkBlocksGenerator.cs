@@ -3,9 +3,8 @@ using System;
 
 namespace CubeCity.Generators.Chunks;
 
-public class CompositeChunkBlocksGenerator : IChunkBlocksGenerator
+public class CompositeChunkBlocksGenerator(IChunkBlocksGenerator[] chunkGenerators) : IChunkBlocksGenerator
 {
-    private readonly IChunkBlocksGenerator[] _chunkGenerators;
     private int _currentChunkGeneratorIndex;
 
     public int CurrentChunkGeneratorIndex
@@ -13,7 +12,7 @@ public class CompositeChunkBlocksGenerator : IChunkBlocksGenerator
         get => _currentChunkGeneratorIndex;
         set
         {
-            if (value < 0 || value > _chunkGenerators.Length)
+            if (value < 0 || value > chunkGenerators.Length)
             {
                 throw new ArgumentOutOfRangeException(nameof(value));
             }
@@ -22,13 +21,8 @@ public class CompositeChunkBlocksGenerator : IChunkBlocksGenerator
         }
     }
 
-    public CompositeChunkBlocksGenerator(IChunkBlocksGenerator[] chunkGenerators)
-    {
-        _chunkGenerators = chunkGenerators;
-    }
-
     public void Generate(Vector2Int chunkPos, ushort[,,] blocks)
     {
-        _chunkGenerators[_currentChunkGeneratorIndex].Generate(chunkPos, blocks);
+        chunkGenerators[_currentChunkGeneratorIndex].Generate(chunkPos, blocks);
     }
 }

@@ -3,11 +3,11 @@ using Leopotam.EcsLite;
 
 namespace CubeCity.Components;
 
-public struct GeneratingChunkComponent : IEcsAutoReset<GeneratingChunkComponent>
+public struct ChunkRequestComponent : IEcsAutoReset<ChunkRequestComponent>
 {
     public Vector2Int Position;
 
-    public void AutoReset(ref GeneratingChunkComponent c)
+    public void AutoReset(ref ChunkRequestComponent c)
     {
         c.Position = default;
     }

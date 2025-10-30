@@ -1,6 +1,6 @@
 ﻿using CubeCity.Tools;
 
-namespace CubeCity.Systems;
+namespace CubeCity.Systems.Utils;
 
 public interface IChunkIsRequiredChecker
 {

@@ -1,7 +1,7 @@
 ﻿using CubeCity.Generators.Chunks;
 using CubeCity.Generators.Models;
 using CubeCity.Models;
-using CubeCity.Systems;
+using CubeCity.Systems.Utils;
 using CubeCity.Tools;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -33,7 +33,7 @@ public class ChunkBlockGenerator
         _chunkIsRequiredChecker = chunkIsRequiredChecker;
 
         _requests = new ActionBlock<ChunkGenerateRequest>(
-            GenerateChunkMesh, new ExecutionDataflowBlockOptions
+            GenerateAndPostChunkMesh, new ExecutionDataflowBlockOptions
             {
                 MaxDegreeOfParallelism = generatingChunkThreads,
                 SingleProducerConstrained = true
@@ -57,23 +57,22 @@ public class ChunkBlockGenerator
         return pooledBlocks;
     }
 
-    private void GenerateChunkMesh(ChunkGenerateRequest request)
+    public ChunkGenerateResponse GenerateChunkMesh(ChunkGenerateRequest request)
     {
         if (!_chunkIsRequiredChecker.IsRequired(request.Position))
         {
-            _responses.Enqueue(new ChunkGenerateResponse(request.Position, Result: null));
-            return;
+            return new ChunkGenerateResponse(request.Position, Result: null);
         }
 
         var blocks = GenerateChunkBlocks(request);
-
         var (indexBuffer, vertexBuffer) = CreateBuffers(blocks);
-
         var result = new ChunkGenerateResponseResult(new ChunkInfo(blocks), vertexBuffer, indexBuffer);
+        return new ChunkGenerateResponse(request.Position, result);
+    }
 
-        var response = new ChunkGenerateResponse(request.Position, result);
-
-        _responses.Enqueue(response);
+    private void GenerateAndPostChunkMesh(ChunkGenerateRequest request)
+    {
+        _responses.Enqueue(GenerateChunkMesh(request));
     }
 
     private (IndexBuffer, VertexBuffer) CreateBuffers(Pooled<ushort[,,]> blocks)

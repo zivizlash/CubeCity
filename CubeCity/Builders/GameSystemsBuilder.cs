@@ -5,6 +5,7 @@ using CubeCity.Generators.Pipelines;
 using CubeCity.Input;
 using CubeCity.Services;
 using CubeCity.Systems;
+using CubeCity.Systems.Utils;
 using CubeCity.Tools;
 using Leopotam.EcsLite;
 using Microsoft.Extensions.Logging;
@@ -42,7 +43,7 @@ public class GameSystemsBuilder
             new DiamondSquareChunkBlocksGenerator()]);
 
         var chunkSystem = new ChunkGeneratorSystem(
-            camera, settings.ChunksViewDistance, chunkIsRequiredChecker,
+            world, camera, settings.ChunksViewDistance, chunkIsRequiredChecker,
             new ChunkBlockGenerator(settings.Blocks, settings.GeneratingChunkThreads, 
                 gameData.GraphicsDevice, chunkGenerator, chunkIsRequiredChecker));
 
