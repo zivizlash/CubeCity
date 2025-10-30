@@ -1,6 +1,7 @@
 ﻿using CubeCity.Generators.Chunks;
 using CubeCity.Generators.Models;
 using CubeCity.Models;
+using CubeCity.Pools;
 using CubeCity.Services;
 using CubeCity.Tools;
 using Microsoft.Xna.Framework.Graphics;
@@ -20,12 +21,12 @@ public class ChunkGenerator(BlockType[] blockTypes, GraphicsDevice graphicsDevic
     public ChunkGenerateResponse GenerateChunkMesh(ChunkGenerateRequest request)
     {
         var blocks = GenerateChunkBlocks(request);
-        var (indexBuffer, vertexBuffer) = CreateBuffers(blocks);
+        var (indexBuffer, vertexBuffer) = CreateMeshBuffersByBlocks(blocks);
         var result = new ChunkGenerateResponseResult(new ChunkInfo(blocks), vertexBuffer, indexBuffer);
         return new ChunkGenerateResponse(request.Position, result);
     }
 
-    private (IndexBuffer, VertexBuffer) CreateBuffers(Pooled<ushort[,,]> blocks)
+    public (IndexBuffer, VertexBuffer) CreateMeshBuffersByBlocks(Pooled<ushort[,,]> blocks)
     {
         var builder = new ChunkMeshGenerator(blockTypes, blocks.Resource);
         var pool = builder.Build();

@@ -36,7 +36,13 @@ public class GameSystemsBuilder
 
         var inputSystem = CreateInputSystem(gamepadManager, keyboardManager, mouseManager);
         var cameraSystem = CreateCameraSystem(gameData, camera, gamepadManager, keyboardManager, mouseManager);
-        var (playerLoaderSystem, chunkSystem) = CreateChunkSystem(gameData, world, settings, camera, backgroundManager, gameData.LoggerFactory);
+
+        var (playerLoaderSystem, 
+            blockGeneratorSystem,
+            chunkUpdatingSystem,
+            chunkMeshSystem) = 
+            CreateChunkSystem(gameData, world, settings, camera, backgroundManager, gameData.LoggerFactory);
+
         var displaySystem = CreateDisplayInfoSystem(gameData, camera, gamepadManager, keyboardManager);
         var spawnSystem = CreateSpawnSystem(world, gameData, camera, keyboardManager);
         var physicsSystem = CreatePhysicsSystem(world, gameData);
@@ -47,7 +53,9 @@ public class GameSystemsBuilder
             .Add(cameraSystem)
             .Add(spawnSystem)
             .Add(playerLoaderSystem)
-            .Add(chunkSystem)
+            .Add(blockGeneratorSystem)
+            .Add(chunkUpdatingSystem)
+            .Add(chunkMeshSystem)
             .Add(physicsSystem)
             .InitChain();
 
@@ -108,9 +116,17 @@ public class GameSystemsBuilder
         return renderSystem;
     }
 
-    private static (ChunkPlayerAroundLoaderSystem, ChunkGeneratorSystem) CreateChunkSystem(
-        GameData gameData, EcsWorld world, GameSettings settings, Camera camera,
-        BackgroundManager backgroundManager, ILoggerFactory loggerFactory)
+    private static (ChunkPlayerAroundLoaderSystem, 
+        ChunkBlockGeneratorSystem, 
+        ChunkBlockUpdatingSystem, 
+        ChunkMeshSystem
+        ) CreateChunkSystem(
+            GameData gameData, 
+            EcsWorld world, 
+            GameSettings settings, 
+            Camera camera,
+            BackgroundManager backgroundManager, 
+            ILoggerFactory loggerFactory)
     {
         var chunkIsRequiredChecker = new ChunkIsRequiredChecker(
             settings.ChunksUnloadDistance, settings.ChunksViewDistance);
@@ -121,11 +137,18 @@ public class GameSystemsBuilder
 
         var chunkGenerator = new ChunkGenerator(settings.Blocks, gameData.GraphicsDevice, chunkBlockGenerator);
 
-        var chunkLoaderLogger = loggerFactory.CreateLogger<ChunkGeneratorSystem>();
-
         var playerLoader = new ChunkPlayerAroundLoaderSystem(world, camera, chunkIsRequiredChecker);
-        var chunkLoader = new ChunkGeneratorSystem(world, chunkGenerator, backgroundManager, chunkLoaderLogger);
+        var chunkLoader = new ChunkGeneratorSystem(world, chunkGenerator, backgroundManager,
+            loggerFactory.CreateLogger<ChunkGeneratorSystem>());
 
-        return (playerLoader, chunkLoader);
+        var chunkBlockGeneratorSystem = new ChunkBlockGeneratorSystem(
+            world, chunkBlockGenerator, backgroundManager);
+
+        var chunkBlockUpdatingSystem = new ChunkBlockUpdatingSystem(world);
+
+        var chunkMeshSystem = new ChunkMeshSystem(world, backgroundManager,
+            gameData.GraphicsDevice, settings.Blocks, loggerFactory.CreateLogger<ChunkMeshSystem>());
+
+        return (playerLoader, chunkBlockGeneratorSystem, chunkBlockUpdatingSystem, chunkMeshSystem);
     }
 }

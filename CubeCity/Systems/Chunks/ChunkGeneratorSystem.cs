@@ -1,21 +1,254 @@
 ﻿using CubeCity.Components;
+using CubeCity.Generators.Chunks;
 using CubeCity.Generators.Models;
 using CubeCity.Generators.Pipelines;
+using CubeCity.Models;
+using CubeCity.Pools;
 using CubeCity.Systems.Chunks.Models;
 using CubeCity.Threading;
 using CubeCity.Tools;
 using Leopotam.EcsLite;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 
 namespace CubeCity.Systems.Chunks;
 
+public struct ChunkBlocksUpdateEvent
+{
+    public Vector2Int ChunkPos;
+    public Pooled<ushort[,,]> Blocks;
+}
+
+public struct ChunkBlocksFetchEvent
+{
+    public Vector2Int Pos;
+}
+
+public class ChunkMeshInfo
+{
+    public EcsPackedEntity? PackedEntity;
+}
+
+public struct ChunkUpdateFlag
+{
+}
+
+public class ChunkMeshSystem : IEcsRunSystem
+{
+    private readonly EcsWorld _world;
+    private readonly GraphicsDevice _graphicsDevice;
+    private readonly BlockType[] _blockTypes;
+    private readonly ILogger<ChunkMeshSystem> _logger;
+    private readonly IProcessorPipe<ChunkMeshRequest, ChunkMeshResponse> _pipe;
+    
+    private readonly EcsFilter _chunkUpdateFlagsFilter;
+
+    private readonly EcsPool<RenderComponent> _renderPool;
+    private readonly EcsPool<ChunkComponent> _chunkPool;
+    private readonly EcsPool<ChunkUpdateFlag> _chunkUpdateFlags;
+
+    public ChunkMeshSystem(EcsWorld world, BackgroundManager backgroundManager, 
+        GraphicsDevice graphicsDevice, BlockType[] blockTypes, ILogger<ChunkMeshSystem> logger)
+    {
+        _world = world;
+        _graphicsDevice = graphicsDevice;
+        _blockTypes = blockTypes;
+        _logger = logger;
+        _pipe = backgroundManager.Create<ChunkMeshRequest, ChunkMeshResponse>(MeshGenerate);
+        _renderPool = world.GetPool<RenderComponent>();
+        _chunkPool = world.GetPool<ChunkComponent>();
+        _chunkUpdateFlags = world.GetPool<ChunkUpdateFlag>();
+        _chunkUpdateFlagsFilter = world.Filter<ChunkUpdateFlag>().End();
+    }
+
+    public void Run(IEcsSystems systems)
+    {
+        foreach (var entity in _chunkUpdateFlagsFilter)
+        {
+            ref var chunkUpdateFlag = ref _chunkUpdateFlags.Get(entity);
+            ref var chunk = ref _chunkPool.Get(entity);
+
+            var packedEntity = _world.PackEntity(entity);
+            _pipe.Enqueue(new ChunkMeshRequest(chunk.Position, packedEntity, chunk.Blocks));
+
+            _chunkUpdateFlags.Del(entity);
+        }
+
+        while (_pipe.TryPoll(out var response))
+        {
+            if (response.PackedEntity.Unpack(_world, out var entity))
+            {
+                if (_renderPool.Has(entity))
+                {
+                    ref var render = ref _renderPool.Get(entity);
+                    render.VertexBuffer.Dispose();
+                    render.IndexBuffer.Dispose();
+                    SetMeshData(response.Mesh.Items, ref render);
+                }
+                else
+                {
+                    ref var render = ref _renderPool.Add(entity);
+                    SetMeshData(response.Mesh.Items, ref render);
+                }
+            }
+            else
+            {
+                _logger.LogError("Error while unpacking chunk {ChunkPos}", response.ChunkPos);
+            }
+
+            response.Mesh.RemoveMemoryUser();
+        }
+    }
+
+    private void SetMeshData(TexturePositionVertices mesh, ref RenderComponent render)
+    {
+        var indexBuffer = new IndexBuffer(_graphicsDevice,
+            IndexElementSize.ThirtyTwoBits, mesh.TrianglesSize, BufferUsage.None);
+
+        indexBuffer.SetData(mesh.InternalTriangles, 0, mesh.TrianglesSize);
+
+        var vertexBuffer = new VertexBuffer(_graphicsDevice,
+            typeof(VertexPositionTexture), mesh.TextureSize, BufferUsage.None);
+
+        vertexBuffer.SetData(mesh.InternalTexture, 0, mesh.TextureSize);
+
+        render.VertexBuffer = vertexBuffer;
+        render.IndexBuffer = indexBuffer;
+    }
+
+    private ChunkMeshResponse MeshGenerate(ChunkMeshRequest request)
+    {
+        var builder = new ChunkMeshGenerator(_blockTypes, request.Blocks.Resource);
+        return new ChunkMeshResponse(request.ChunkPos, request.PackedEntity, builder.Build());
+    }
+
+    public record ChunkMeshRequest(Vector2Int ChunkPos, EcsPackedEntity PackedEntity, Pooled<ushort[,,]> Blocks);
+    public record ChunkMeshResponse(Vector2Int ChunkPos, EcsPackedEntity PackedEntity, PooledMemory<TexturePositionVertices> Mesh);
+}
+
+public class ChunkBlockUpdatingInfo
+{
+    public required EcsPackedEntity PackedEntity;
+}
+
+public class ChunkBlockUpdatingSystem(EcsWorld world) : IEcsRunSystem
+{
+    private readonly Dictionary<Vector2Int, ChunkBlockUpdatingInfo> _chunkPosToInfo = new(512);
+    private readonly EcsPool<ChunkBlocksUpdateEvent> _blocksUpdatesEvents = world.GetPool<ChunkBlocksUpdateEvent>();
+    private readonly EcsPool<PositionComponent> _positionPool = world.GetPool<PositionComponent>();
+    private readonly EcsPool<ChunkComponent> _chunkPool = world.GetPool<ChunkComponent>();
+    private readonly EcsPool<ChunkUpdateFlag> _chunkUpdateFlags = world.GetPool<ChunkUpdateFlag>();
+    private readonly EcsFilter _chunkBlockUpdatesFilter = world.Filter<ChunkBlocksUpdateEvent>().End();
+
+    public void Run(IEcsSystems systems)
+    {
+        foreach (var updateEntity in _chunkBlockUpdatesFilter)
+        {
+            ref var chunkBlockUpdate = ref _blocksUpdatesEvents.Get(updateEntity);
+
+            if (_chunkPosToInfo.TryGetValue(chunkBlockUpdate.ChunkPos, out var chunkInfo))
+            {
+                var entity = chunkInfo.PackedEntity.Unpack(world);
+
+                // todo: это пипяу, по факту он может участвовать в генерации меша
+                // и мне нужно использовать нормальные пулы с подсчетом ссылок 
+                // аааааааааааааааааааааааааааааааааааааааааааа
+                ref var chunk = ref _chunkPool.Get(entity);
+                chunk.Blocks.Dispose();
+                chunk.Blocks = chunkBlockUpdate.Blocks;
+
+                if (!_chunkUpdateFlags.Has(entity))
+                {
+                    _chunkUpdateFlags.Add(entity);
+                }
+            }
+            else
+            {
+                var entity = world.NewEntity();
+                var packedEntity = world.PackEntity(entity);
+
+                chunkInfo = new ChunkBlockUpdatingInfo { PackedEntity = packedEntity };
+                _chunkPosToInfo.Add(chunkBlockUpdate.ChunkPos, chunkInfo);
+
+                ref var chunk = ref _chunkPool.Add(entity);
+                chunk.Blocks = chunkBlockUpdate.Blocks;
+                chunk.Position = chunkBlockUpdate.ChunkPos;
+
+                ref var position = ref _positionPool.Add(entity);
+                position.Position = new Vector3(
+                    chunkBlockUpdate.ChunkPos.X * 16,
+                    0,
+                    chunkBlockUpdate.ChunkPos.Y * 16);
+
+                _chunkUpdateFlags.Add(entity);
+            }
+
+            _blocksUpdatesEvents.Del(updateEntity);
+        }
+    }
+}
+
+public class ChunkBlockGeneratorSystem : IEcsRunSystem
+{
+    private readonly IProcessorPipe<BlockGeneratorRequest, BlockGeneratorResponse> _pipe;
+    private readonly IChunkBlocksGenerator _blocksGenerator;
+    
+    private readonly EcsWorld _world;
+
+    private readonly EcsFilter _fetchEventsFilter;
+    private readonly EcsPool<ChunkBlocksFetchEvent> _fetchEventsPool;
+    private readonly EcsPool<ChunkBlocksUpdateEvent> _chunkBlocksFetchedPool;
+
+    public ChunkBlockGeneratorSystem(EcsWorld world, IChunkBlocksGenerator blocksGenerator,
+        BackgroundManager backgroundManager)
+    {
+        _world = world;
+        _blocksGenerator = blocksGenerator;
+
+        _fetchEventsPool = world.GetPool<ChunkBlocksFetchEvent>();
+        _fetchEventsFilter = world.Filter<ChunkBlocksFetchEvent>().End();
+        _chunkBlocksFetchedPool = world.GetPool<ChunkBlocksUpdateEvent>();
+
+        _pipe = backgroundManager.Create<BlockGeneratorRequest, BlockGeneratorResponse>(GenerateBlocks);
+    }
+
+    public void Run(IEcsSystems systems)
+    {
+        foreach (var entity in _fetchEventsFilter)
+        {
+            var chunkPos = _fetchEventsPool.Get(entity).Pos;
+            _fetchEventsPool.Del(entity);
+            _pipe.Enqueue(new BlockGeneratorRequest(chunkPos));
+        }
+
+        while (_pipe.TryPoll(out var result))
+        {
+            var entity = _world.NewEntity();
+            ref var fetched = ref _chunkBlocksFetchedPool.Add(entity);
+            fetched.ChunkPos = result.ChunkPos;
+            fetched.Blocks = result.Blocks;
+        }
+    }
+
+    private BlockGeneratorResponse GenerateBlocks(BlockGeneratorRequest request)
+    {
+        var pooledBlocks = ChunkBlocksPool.Get(16, 128);
+        _blocksGenerator.Generate(request.ChunkPos, pooledBlocks.Resource);
+        var response = new BlockGeneratorResponse(request.ChunkPos, pooledBlocks);
+        return response;
+    }
+
+    public record BlockGeneratorRequest(Vector2Int ChunkPos);
+    public record BlockGeneratorResponse(Vector2Int ChunkPos, Pooled<ushort[,,]> Blocks);
+}
+
 public class ChunkGeneratorSystem : IEcsRunSystem
 {
     private readonly IProcessorPipe<GeneratorRequest, GeneratorResponse> _pipe;
-    private readonly ChunkGenerator _chunkGenerator;
     private readonly ILogger<ChunkGeneratorSystem> _logger;
+    private readonly ChunkGenerator _chunkGenerator;
     private readonly Dictionary<Vector2Int, ChunkLoaderInfo> _chunkPosToInfo;
 
     private readonly EcsWorld _world;

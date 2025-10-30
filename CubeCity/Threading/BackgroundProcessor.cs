@@ -15,7 +15,7 @@ public class BackgroundProcessor
             SingleProducerConstrained = true,
             MaxDegreeOfParallelism = Environment.ProcessorCount / 2,
             EnsureOrdered = false,
-            BoundedCapacity = 2048,
+            BoundedCapacity = 4096,
             CancellationToken = cancellationToken
         });
     }

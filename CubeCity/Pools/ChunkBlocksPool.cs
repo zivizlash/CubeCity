@@ -3,7 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace CubeCity.Models;
+namespace CubeCity.Pools;
 
 public static class ChunkBlocksPool
 {

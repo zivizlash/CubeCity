@@ -10,7 +10,7 @@ namespace CubeCity.Systems.Chunks;
 public class ChunkPlayerAroundLoaderSystem(EcsWorld world, Camera camera,
     ChunkIsRequiredChecker chunkIsRequiredChecker) : IEcsRunSystem
 {
-    private readonly EcsPool<ChunkRequestLoadEvent> _chunkLoadPool = world.GetPool<ChunkRequestLoadEvent>();
+    private readonly EcsPool<ChunkBlocksFetchEvent> _chunkLoadPool = world.GetPool<ChunkBlocksFetchEvent>();
     private readonly EcsPool<ChunkRequestUnloadEvent> _chunkUnloadPool = world.GetPool<ChunkRequestUnloadEvent>();
     private readonly HashSet<Vector2Int> _loadedChunks = new(128);
 
