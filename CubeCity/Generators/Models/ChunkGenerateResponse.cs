@@ -17,4 +17,6 @@ public readonly record struct ChunkGenerateResponseResult(
     }
 }
 
-public readonly record struct ChunkGenerateResponse(Vector2Int Position, ChunkGenerateResponseResult? Result);
+public readonly record struct ChunkGenerateResponse(
+    Vector2Int Position, 
+    ChunkGenerateResponseResult? Result);

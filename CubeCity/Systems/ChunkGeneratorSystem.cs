@@ -13,32 +13,26 @@ using System.Collections.Generic;
 
 namespace CubeCity.Systems;
 
-public struct ChunkLoadComponent
+public struct ChunkRequestLoadEvent
 {
     public Vector2Int Pos;
 }
 
-public struct ChunkUnloadComponent
-{
-    public Vector2Int Pos;
-}
-
-public struct ChunkLoadingComponent
+public struct ChunkRequestUnloadEvent
 {
     public Vector2Int Pos;
 }
 
 public enum ChunkLoaderState
 {
-    Loading = 1,
-    Loaded,
-    Cancelled
+    Generating = 1,
+    Loaded
 }
 
-public class ChunkLoaderInfo(EcsPackedEntity packedEntity)
+public class ChunkLoaderInfo(ChunkLoaderState state)
 {
-    public readonly EcsPackedEntity PackedEntity = packedEntity;
-    public ChunkLoaderState State = ChunkLoaderState.Loading;
+    public EcsPackedEntity? PackedEntity;
+    public ChunkLoaderState State = state;
 }
 
 public class ChunkLoaderSystem : IEcsRunSystem
@@ -47,10 +41,9 @@ public class ChunkLoaderSystem : IEcsRunSystem
     private readonly EcsWorld _world;
     private readonly ChunkGenerator _chunkGenerator;
     private readonly ILogger<ChunkLoaderSystem> _logger;
-    private readonly Dictionary<Vector2Int, ChunkLoaderInfo> _posToInfo;
-    private readonly EcsPool<ChunkLoadComponent> _loadPool;
-    private readonly EcsPool<ChunkLoadingComponent> _loadingPool;
-    private readonly EcsPool<ChunkUnloadComponent> _unloadPool;
+    private readonly Dictionary<Vector2Int, ChunkLoaderInfo> _chunkPosToInfo;
+    private readonly EcsPool<ChunkRequestLoadEvent> _loadEvents;
+    private readonly EcsPool<ChunkRequestUnloadEvent> _unloadPool;
     private readonly EcsFilter _loadFilter;
     private readonly EcsFilter _unloadFilter;
 
@@ -64,15 +57,13 @@ public class ChunkLoaderSystem : IEcsRunSystem
         _pipe = backgroundManager.Create<GeneratorRequest, GeneratorResponse>(CreateChunk);
         _world = world;
         _chunkGenerator = chunkGenerator;
-        _posToInfo = new(64);
+        _chunkPosToInfo = new(64);
         _logger = logger;
 
-        _loadPool = world.GetPool<ChunkLoadComponent>();
-        _unloadPool = world.GetPool<ChunkUnloadComponent>();
-        _loadingPool = world.GetPool<ChunkLoadingComponent>();
-
-        _loadFilter = world.Filter<ChunkLoadComponent>().End();
-        _unloadFilter = world.Filter<ChunkUnloadComponent>().End();
+        _loadEvents = world.GetPool<ChunkRequestLoadEvent>();
+        _unloadPool = world.GetPool<ChunkRequestUnloadEvent>();
+        _loadFilter = world.Filter<ChunkRequestLoadEvent>().End();
+        _unloadFilter = world.Filter<ChunkRequestUnloadEvent>().End();
 
         _chunksPool = world.GetPool<ChunkComponent>();
         _renderPool = world.GetPool<RenderComponent>();
@@ -81,152 +72,124 @@ public class ChunkLoaderSystem : IEcsRunSystem
 
     public void Run(IEcsSystems systems)
     {
-        PlaceGeneratedInWorld();
+        while (_pipe.TryPoll(out var generatorResult))
+        {
+            PlaceGeneratedInWorld(generatorResult);
+        }
         EnqueueGeneratingRequests();
         UnloadUnusedChunks();
     }
 
-    private void PlaceGeneratedInWorld()
+    private void PlaceGeneratedInWorld(GeneratorResponse response)
     {
-        while (_pipe.TryPoll(out var result))
+        var chunkInfo = _chunkPosToInfo[response.ChunkPos];
+        var result = response.Result;
+
+        if (chunkInfo.State is ChunkLoaderState.Loaded)
         {
-            var response = result.Response;
-            var chunkInfo = _posToInfo[response.Position];
-
-            if (response.Result is null && chunkInfo.State != ChunkLoaderState.Loading)
-            {
-                continue;
-            }
-
-            if (response.Result.HasValue)
-            {
-                var chunkData = response.Result.Value;
-
-                if (chunkInfo.State is ChunkLoaderState.Loaded or ChunkLoaderState.Cancelled)
-                {
-                    _logger.LogInformation("Skipped chunk update due state {State}", chunkInfo.State);
-                    chunkData.Dispose();
-                    continue;
-                }
-
-                var entity = chunkInfo.PackedEntity.Unpack(_world);
-
-                ref var chunk = ref _chunksPool.Add(entity);
-                chunk.Blocks = chunkData.ChunkInfo.Blocks;
-                chunk.Position = response.Position;
-
-                ref var render = ref _renderPool.Add(entity);
-                render.VertexBuffer = chunkData.VertexBuffer;
-                render.IndexBuffer = chunkData.IndexBuffer;
-
-                ref var position = ref _positionPool.Add(entity);
-                position.Position = new Vector3(
-                    response.Position.X * 16,
-                    0,
-                    response.Position.Y * 16);
-
-                chunkInfo.State = ChunkLoaderState.Loaded;
-                _loadingPool.Del(entity);
-            }
-            else
-            {
-                _logger.LogInformation("Chunk generation skipped. Internal state: {State}", chunkInfo.State);
-
-                var entity = chunkInfo.PackedEntity.Unpack(_world);
-
-                if (chunkInfo.State == ChunkLoaderState.Loading || chunkInfo.State == ChunkLoaderState.Cancelled)
-                {
-                    _loadingPool.Del(entity);
-                    _posToInfo.Remove(response.Position);
-                    _logger.LogInformation(
-                        "Deleted LoadingComponent and removed dict entry due {State}",
-                        chunkInfo.State);
-                    continue;
-                }
-            }
+            _logger.LogInformation("Skipped chunk update due state {State}", chunkInfo.State);
+            // next step updating chunk when blocks updated
+            result.Dispose();
+            return;
         }
+
+        var entity = _world.NewEntity();
+        chunkInfo.PackedEntity = _world.PackEntity(entity);
+
+        ref var chunk = ref _chunksPool.Add(entity);
+        chunk.Blocks = result.ChunkInfo.Blocks;
+        chunk.Position = response.ChunkPos;
+
+        ref var render = ref _renderPool.Add(entity);
+        render.VertexBuffer = result.VertexBuffer;
+        render.IndexBuffer = result.IndexBuffer;
+
+        ref var position = ref _positionPool.Add(entity);
+        position.Position = new Vector3(
+            response.ChunkPos.X * 16,
+            0,
+            response.ChunkPos.Y * 16);
+
+        chunkInfo.State = ChunkLoaderState.Loaded;
     }
 
     private void EnqueueGeneratingRequests()
     {
-        foreach (var entityId in _loadFilter)
+        foreach (var entity in _loadFilter)
         {
-            var chunkPos = _loadPool.Get(entityId).Pos;
+            var chunkPos = _loadEvents.Get(entity).Pos;
+            _loadEvents.Del(entity);
 
-            if (_posToInfo.TryGetValue(chunkPos, out var chunkInfo))
+            if (_chunkPosToInfo.TryGetValue(chunkPos, out var chunkInfo))
             {
-                _logger.LogError("Got LoadComponent while entry already exists. State: {State}",
+                _logger.LogError(
+                    "Got LoadComponent while entry already exists. State: {State}",
                     chunkInfo.State);
-                _loadPool.Del(entityId);
                 continue;
             }
 
-            ref var loading = ref _loadingPool.Add(entityId);
-            loading.Pos = chunkPos;
-            _loadPool.Del(entityId);
-
-            _posToInfo.Add(chunkPos, new ChunkLoaderInfo(_world.PackEntity(entityId)));
+            _chunkPosToInfo.Add(chunkPos, new ChunkLoaderInfo(ChunkLoaderState.Generating));
             _pipe.Enqueue(new GeneratorRequest(chunkPos));
         }
     }
 
     private void UnloadUnusedChunks()
     {
-        foreach (var entityId in _unloadFilter)
+        foreach (var unloadEntity in _unloadFilter)
         {
-            var chunkPos = _unloadPool.Get(entityId).Pos;
-            _unloadPool.Del(entityId);
+            var chunkPos = _unloadPool.Get(unloadEntity).Pos;
+            _unloadPool.Del(unloadEntity);
 
-            if (!_posToInfo.TryGetValue(chunkPos, out var chunkInfo))
-            {
-                _logger.LogError("Internal entry not found for unloading chunk: {ChunkPos}", chunkPos);
-                continue;
-            }
-
-            if (chunkInfo.State == ChunkLoaderState.Cancelled)
+            if (!_chunkPosToInfo.TryGetValue(chunkPos, out var chunkInfo))
             {
                 _logger.LogInformation(
-                    "Got UnloadComponent while internal state already cancelled: {ChunkPos}", 
+                    "Internal entry not found for unloading chunk: {ChunkPos}", 
                     chunkPos);
                 continue;
             }
 
-            if (chunkInfo.State == ChunkLoaderState.Loading)
+            _chunkPosToInfo.Remove(chunkPos);
+
+            if (chunkInfo.State == ChunkLoaderState.Generating)
             {
-                _logger.LogInformation("Cancelled ChunkGenerating before generating: {ChunkPos}", chunkPos);
-                chunkInfo.State = ChunkLoaderState.Cancelled;
+                _logger.LogInformation(
+                    "Unloaded ungenerated chunk: {ChunkPos}", 
+                    chunkPos);
                 continue;
             }
 
-            if (chunkInfo.State != ChunkLoaderState.Loaded)
+            if (chunkInfo.State == ChunkLoaderState.Loaded)
+            {
+                var entity = chunkInfo.PackedEntity!.Value.Unpack(_world);
+                _renderPool.Del(entity);
+                _chunksPool.Del(entity);
+                _positionPool.Del(entity);
+            }
+            else
             {
                 _logger.LogError("Expected Loaded state, but got {State}: {ChunkPos}", 
                     chunkInfo.State, chunkPos);
                 continue;
             }
-
-            _renderPool.Del(entityId);
-            _chunksPool.Del(entityId);
-            _positionPool.Del(entityId);
         }
     }
 
     private GeneratorResponse CreateChunk(GeneratorRequest request)
     {
-        var chunkMesh = _chunkGenerator.GenerateChunkMesh(new ChunkGenerateRequest(request.Pos));
-        return new GeneratorResponse(chunkMesh);
+        var chunkMesh = _chunkGenerator.GenerateChunkMesh2(new ChunkGenerateRequest(request.Pos));
+        return new GeneratorResponse(chunkMesh.Result!.Value, chunkMesh.Position);
     }
 
     public record GeneratorRequest(Vector2Int Pos);
-    public record GeneratorResponse(ChunkGenerateResponse Response);
+    public record GeneratorResponse(ChunkGenerateResponseResult Result, Vector2Int ChunkPos);
 }
 
 public class ChunkPlayerLoaderSystem(EcsWorld world, Camera camera,
     ChunkIsRequiredChecker chunkIsRequiredChecker, ILogger<ChunkPlayerLoaderSystem> logger) : IEcsRunSystem
 {
-    private readonly Dictionary<Vector2Int, EcsPackedEntity> _loadingChunks = new(128);
-    private readonly EcsPool<ChunkLoadComponent> _chunkLoadPool = world.GetPool<ChunkLoadComponent>();
-    private readonly EcsPool<ChunkUnloadComponent> _chunkUnloadPool = world.GetPool<ChunkUnloadComponent>();
+    private readonly EcsPool<ChunkRequestLoadEvent> _chunkLoadPool = world.GetPool<ChunkRequestLoadEvent>();
+    private readonly EcsPool<ChunkRequestUnloadEvent> _chunkUnloadPool = world.GetPool<ChunkRequestUnloadEvent>();
+    private readonly HashSet<Vector2Int> _loadedChunks = new(128);
 
     private Vector2Int _playerChunkPos = new(int.MinValue, int.MinValue);
 
@@ -265,12 +228,12 @@ public class ChunkPlayerLoaderSystem(EcsWorld world, Camera camera,
             {
                 var chunkPos = _playerChunkPos + new Vector2Int(x, z);
 
-                if (!_loadingChunks.ContainsKey(chunkPos))
+                if (!_loadedChunks.Contains(chunkPos))
                 {
+                    _loadedChunks.Add(chunkPos);
                     var entity = world.NewEntity();
                     ref var request = ref _chunkLoadPool.Add(entity);
                     request.Pos = chunkPos;
-                    _loadingChunks.Add(chunkPos, world.PackEntity(entity));
                     count++;
                 }
             }
@@ -283,30 +246,14 @@ public class ChunkPlayerLoaderSystem(EcsWorld world, Camera camera,
     {
         int count = 0;
 
-        foreach (var (position, packed) in _loadingChunks)
+        foreach (var position in _loadedChunks)
         {
             if (chunkIsRequiredChecker.IsForDelete(position))
             {
-                // load -> loading -> loaded
-
-                if (packed.Unpack(world, out var entity))
-                {
-                    count++;
-                    if (_chunkLoadPool.Has(entity))
-                    {
-                        _chunkLoadPool.Del(entity);
-                    }
-                    else
-                    {
-                        _chunkUnloadPool.Add(entity).Pos = position;
-                    }
-                }
-                else
-                {
-                    logger.LogInformation("Failed to unpack chunk: {ChunkPos}", position);
-                }
-
-                _loadingChunks.Remove(position);
+                var entity = world.NewEntity();
+                ref var unloadRequest = ref _chunkUnloadPool.Add(entity);
+                unloadRequest.Pos = position;
+                _loadedChunks.Remove(position);
             }
         }
 

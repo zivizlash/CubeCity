@@ -57,6 +57,14 @@ public class ChunkGenerator
         return pooledBlocks;
     }
 
+    public ChunkGenerateResponse GenerateChunkMesh2(ChunkGenerateRequest request)
+    {
+        var blocks = GenerateChunkBlocks(request);
+        var (indexBuffer, vertexBuffer) = CreateBuffers(blocks);
+        var result = new ChunkGenerateResponseResult(new ChunkInfo(blocks), vertexBuffer, indexBuffer);
+        return new ChunkGenerateResponse(request.Position, result);
+    }
+
     public ChunkGenerateResponse GenerateChunkMesh(ChunkGenerateRequest request)
     {
         if (!_chunkIsRequiredChecker.IsRequired(request.Position))
