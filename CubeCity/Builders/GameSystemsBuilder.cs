@@ -34,28 +34,33 @@ public class GameSystemsBuilder
 
         var backgroundManager = new BackgroundManager();
 
-        var inputSystem = CreateInputSystem(gamepadManager, keyboardManager, mouseManager);
-        var cameraSystem = CreateCameraSystem(gameData, camera, gamepadManager, keyboardManager, mouseManager);
+        var commonServices = new CommonServices
+        {
+            World = world,
+            Settings = settings,
+            BackgroundManager = backgroundManager,
+            GamepadManager = gamepadManager,
+            KeyboardManager = keyboardManager,
+            MouseService = mouseManager,
+            GameData = gameData
+        };
 
-        var (playerLoaderSystem, 
-            blockGeneratorSystem,
-            chunkUpdatingSystem,
-            chunkMeshSystem) = 
-            CreateChunkSystem(gameData, world, settings, camera, backgroundManager, gameData.LoggerFactory);
-
-        var displaySystem = CreateDisplayInfoSystem(gameData, camera, gamepadManager, keyboardManager);
-        var spawnSystem = CreateSpawnSystem(world, gameData, camera, keyboardManager);
-        var physicsSystem = CreatePhysicsSystem(world, gameData);
-        var renderSystem = CreateRenderSystem(world, gameData, camera);
+        var inputSystem = CreateInputSystem(commonServices);
+        var cameraSystem = CreateCameraSystem(commonServices, camera);
+        var chunkSystems =  CreateChunkSystem(commonServices, camera);
+        var displaySystem = CreateDisplayInfoSystem(commonServices, camera);
+        var spawnSystem = CreateSpawnSystem(commonServices, camera);
+        var physicsSystem = CreatePhysicsSystem(commonServices);
+        var renderSystem = CreateRenderSystem(commonServices, camera);
 
         var updateSystems = new EcsSystems(world)
             .Add(inputSystem)
             .Add(cameraSystem)
             .Add(spawnSystem)
-            .Add(playerLoaderSystem)
-            .Add(blockGeneratorSystem)
-            .Add(chunkUpdatingSystem)
-            .Add(chunkMeshSystem)
+            .Add(chunkSystems.ChunkPlayerLoader)
+            .Add(chunkSystems.ChunkGeneratorSystem)
+            .Add(chunkSystems.ChunkUpdatingSystem)
+            .Add(chunkSystems.ChunkMeshSystem)
             .Add(physicsSystem)
             .InitChain();
 
@@ -67,36 +72,36 @@ public class GameSystemsBuilder
         return new GameSystemsContainer(updateSystems, drawSystems, world);
     }
 
-    private static InputSystem CreateInputSystem(GamepadInputManager gamepadManager, KeyboardInputManager keyboardManager, MouseService mouseManager)
+    private static InputSystem CreateInputSystem(CommonServices services)
     {
-        return new InputSystem(gamepadManager, keyboardManager, mouseManager);
+        return new InputSystem(services.GamepadManager, services.KeyboardManager, services.MouseService);
     }
 
-    private static CameraSystem CreateCameraSystem(GameData gameData, Camera camera, GamepadInputManager gamepadManager, KeyboardInputManager keyboardManager, MouseService mouseManager)
+    private static CameraSystem CreateCameraSystem(CommonServices services, Camera camera)
     {
-        return new CameraSystem(gamepadManager, keyboardManager,
-            mouseManager, camera, gameData.Window, gameData.Time);
+        return new CameraSystem(services.GamepadManager, services.KeyboardManager,
+            services.MouseService, camera, services.GameData.Window, services.GameData.Time);
     }
 
-    private static DisplayInfoSystem CreateDisplayInfoSystem(GameData gameData, Camera camera, GamepadInputManager gamepadManager, KeyboardInputManager keyboardManager)
+    private static DisplayInfoSystem CreateDisplayInfoSystem(CommonServices services, Camera camera)
     {
-        return new DisplayInfoSystem(gamepadManager, keyboardManager,
-            gameData.SpriteBatch, gameData.SpriteFont, camera, gameData.Exit);
+        return new DisplayInfoSystem(services.GamepadManager, services.KeyboardManager,
+            services.GameData.SpriteBatch, services.GameData.SpriteFont, camera, services.GameData.Exit);
     }
 
-    private static SpawnSystem CreateSpawnSystem(EcsWorld world, GameData gameData, Camera camera, KeyboardInputManager keyboardManager)
+    private static SpawnSystem CreateSpawnSystem(CommonServices services, Camera camera)
     {
-        return new SpawnSystem(world, camera, keyboardManager,
-            gameData.GraphicsDevice, gameData.Settings.Blocks,
-            gameData.LoggerFactory.CreateLogger<SpawnSystem>());
+        return new SpawnSystem(services.World, camera, services.KeyboardManager,
+            services.GameData.GraphicsDevice, services.GameData.Settings.Blocks,
+            services.GameData.LoggerFactory.CreateLogger<SpawnSystem>());
     }
 
-    private static PhysicsSystem CreatePhysicsSystem(EcsWorld world, GameData gameData)
+    private static PhysicsSystem CreatePhysicsSystem(CommonServices services)
     {
-        return new PhysicsSystem(world, gameData.Time);
+        return new PhysicsSystem(services.World, services.GameData.Time);
     }
 
-    private static RenderSystem CreateRenderSystem(EcsWorld world, GameData gameData, Camera camera)
+    private static RenderSystem CreateRenderSystem(CommonServices services, Camera camera)
     {
         var rasterizer = new RasterizerState
         {
@@ -104,51 +109,60 @@ public class GameSystemsBuilder
             MultiSampleAntiAlias = true
         };
 
-        var effect = new BasicEffect(gameData.GraphicsDevice)
+        var effect = new BasicEffect(services.GameData.GraphicsDevice)
         {
             TextureEnabled = true,
             PreferPerPixelLighting = true
         };
 
-        var renderSystem = new RenderSystem(world, gameData.GraphicsDevice, rasterizer,
-            camera, effect, gameData.BlocksTexture);
+        var renderSystem = new RenderSystem(services.World, services.GameData.GraphicsDevice, rasterizer,
+            camera, effect, services.GameData.BlocksTexture);
 
         return renderSystem;
     }
 
-    private static (ChunkPlayerAroundLoaderSystem, 
-        ChunkBlockGeneratorSystem, 
-        ChunkBlockUpdatingSystem, 
-        ChunkMeshSystem
-        ) CreateChunkSystem(
-            GameData gameData, 
-            EcsWorld world, 
-            GameSettings settings, 
-            Camera camera,
-            BackgroundManager backgroundManager, 
-            ILoggerFactory loggerFactory)
+    private static ChunkSystemsData CreateChunkSystem(CommonServices services, Camera camera)
     {
         var chunkIsRequiredChecker = new ChunkIsRequiredChecker(
-            settings.ChunksUnloadDistance, settings.ChunksViewDistance);
+            services.Settings.ChunksUnloadDistance, services.Settings.ChunksViewDistance);
 
         var chunkBlockGenerator = new CompositeChunkBlocksGenerator([
             new PerlinChunkBlocksGenerator(new PerlinNoise2D()),
             new DiamondSquareChunkBlocksGenerator()]);
 
-        var chunkGenerator = new ChunkGenerator(settings.Blocks, gameData.GraphicsDevice, chunkBlockGenerator);
+        var chunkGenerator = new ChunkGenerator(services.Settings.Blocks, services.GameData.GraphicsDevice, chunkBlockGenerator);
+        var playerLoader = new ChunkPlayerLoaderSystem(services.World, camera, chunkIsRequiredChecker);
+        var chunkGeneratorSystem = new ChunkGeneratorSystem(services.World, chunkBlockGenerator, services.BackgroundManager);
+        var chunkUpdatingSystem = new ChunkUpdatingSystem(services.World);
+        var chunkMeshSystem = new ChunkMeshSystem(services.World, services.BackgroundManager,
+            services.GameData.GraphicsDevice, services.Settings.Blocks, 
+            services.GameData.LoggerFactory.CreateLogger<ChunkMeshSystem>());
 
-        var playerLoader = new ChunkPlayerAroundLoaderSystem(world, camera, chunkIsRequiredChecker);
-        var chunkLoader = new ChunkGeneratorSystem(world, chunkGenerator, backgroundManager,
-            loggerFactory.CreateLogger<ChunkGeneratorSystem>());
+        return new ChunkSystemsData
+        {
+            ChunkPlayerLoader = playerLoader,
+            ChunkGeneratorSystem = chunkGeneratorSystem,
+            ChunkUpdatingSystem = chunkUpdatingSystem,
+            ChunkMeshSystem = chunkMeshSystem
+        };
+    }
 
-        var chunkBlockGeneratorSystem = new ChunkBlockGeneratorSystem(
-            world, chunkBlockGenerator, backgroundManager);
+    internal struct ChunkSystemsData
+    {
+        public required ChunkPlayerLoaderSystem ChunkPlayerLoader;
+        public required ChunkGeneratorSystem ChunkGeneratorSystem;
+        public required ChunkUpdatingSystem ChunkUpdatingSystem;
+        public required ChunkMeshSystem ChunkMeshSystem;
+    }
 
-        var chunkBlockUpdatingSystem = new ChunkBlockUpdatingSystem(world);
-
-        var chunkMeshSystem = new ChunkMeshSystem(world, backgroundManager,
-            gameData.GraphicsDevice, settings.Blocks, loggerFactory.CreateLogger<ChunkMeshSystem>());
-
-        return (playerLoader, chunkBlockGeneratorSystem, chunkBlockUpdatingSystem, chunkMeshSystem);
+    internal struct CommonServices
+    {
+        public required EcsWorld World;
+        public required GameData GameData;
+        public required GamepadInputManager GamepadManager;
+        public required KeyboardInputManager KeyboardManager;
+        public required MouseService MouseService;
+        public required GameSettings Settings;
+        public required BackgroundManager BackgroundManager;
     }
 }

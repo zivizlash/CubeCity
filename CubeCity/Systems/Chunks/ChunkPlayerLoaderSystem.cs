@@ -7,11 +7,11 @@ using System.Collections.Generic;
 
 namespace CubeCity.Systems.Chunks;
 
-public class ChunkPlayerAroundLoaderSystem(EcsWorld world, Camera camera,
+public class ChunkPlayerLoaderSystem(EcsWorld world, Camera camera,
     ChunkIsRequiredChecker chunkIsRequiredChecker) : IEcsRunSystem
 {
     private readonly EcsPool<ChunkBlocksFetchEvent> _chunkLoadPool = world.GetPool<ChunkBlocksFetchEvent>();
-    private readonly EcsPool<ChunkRequestUnloadEvent> _chunkUnloadPool = world.GetPool<ChunkRequestUnloadEvent>();
+    private readonly EcsPool<ChunkBlocksUnloadEvent> _chunkUnloadPool = world.GetPool<ChunkBlocksUnloadEvent>();
     private readonly HashSet<Vector2Int> _loadedChunks = new(128);
 
     private Vector2Int _playerChunkPos = new(int.MinValue, int.MinValue);
@@ -38,9 +38,8 @@ public class ChunkPlayerAroundLoaderSystem(EcsWorld world, Camera camera,
             {
                 var chunkPos = _playerChunkPos + new Vector2Int(x, z);
 
-                if (!_loadedChunks.Contains(chunkPos))
+                if (_loadedChunks.Add(chunkPos))
                 {
-                    _loadedChunks.Add(chunkPos);
                     var entity = world.NewEntity();
                     ref var request = ref _chunkLoadPool.Add(entity);
                     request.Pos = chunkPos;
