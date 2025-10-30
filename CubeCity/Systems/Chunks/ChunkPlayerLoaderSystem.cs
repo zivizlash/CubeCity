@@ -56,7 +56,7 @@ public class ChunkPlayerLoaderSystem(EcsWorld world, Camera camera,
             {
                 var entity = world.NewEntity();
                 ref var unloadRequest = ref _chunkUnloadPool.Add(entity);
-                unloadRequest.Pos = position;
+                unloadRequest.ChunkPos = position;
                 _loadedChunks.Remove(position);
             }
         }

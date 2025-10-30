@@ -132,7 +132,7 @@ public class GameSystemsBuilder
 
         var chunkGenerator = new ChunkGenerator(services.Settings.Blocks, services.GameData.GraphicsDevice, chunkBlockGenerator);
         var playerLoader = new ChunkPlayerLoaderSystem(services.World, camera, chunkIsRequiredChecker);
-        var chunkGeneratorSystem = new ChunkGeneratorSystem(services.World, chunkBlockGenerator, services.BackgroundManager);
+        var chunkGeneratorSystem = new ChunkBlockGeneratorSystem(services.World, chunkBlockGenerator, services.BackgroundManager);
         var chunkUpdatingSystem = new ChunkUpdatingSystem(services.World);
         var chunkMeshSystem = new ChunkMeshSystem(services.World, services.BackgroundManager,
             services.GameData.GraphicsDevice, services.Settings.Blocks, 
@@ -150,7 +150,7 @@ public class GameSystemsBuilder
     internal struct ChunkSystemsData
     {
         public required ChunkPlayerLoaderSystem ChunkPlayerLoader;
-        public required ChunkGeneratorSystem ChunkGeneratorSystem;
+        public required ChunkBlockGeneratorSystem ChunkGeneratorSystem;
         public required ChunkUpdatingSystem ChunkUpdatingSystem;
         public required ChunkMeshSystem ChunkMeshSystem;
     }

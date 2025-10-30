@@ -14,12 +14,34 @@ public class ChunkUpdatingSystem(EcsWorld world) : IEcsRunSystem
 {
     private readonly Dictionary<Vector2Int, ChunkBlockUpdatingInfo> _chunkPosToInfo = new(512);
     private readonly EcsPool<ChunkBlocksUpdateEvent> _blocksUpdatesEvents = world.GetPool<ChunkBlocksUpdateEvent>();
+    private readonly EcsPool<ChunkBlocksUnloadEvent> _blocksUnloadEvents = world.GetPool<ChunkBlocksUnloadEvent>();
     private readonly EcsPool<PositionComponent> _positionPool = world.GetPool<PositionComponent>();
     private readonly EcsPool<ChunkComponent> _chunkPool = world.GetPool<ChunkComponent>();
     private readonly EcsPool<ChunkUpdateFlag> _chunkUpdateFlags = world.GetPool<ChunkUpdateFlag>();
     private readonly EcsFilter _chunkBlockUpdatesFilter = world.Filter<ChunkBlocksUpdateEvent>().End();
+    private readonly EcsFilter _chunkBlockUnloadFilter = world.Filter<ChunkBlocksUnloadEvent>().End();
 
     public void Run(IEcsSystems systems)
+    {
+        ProcessUpdates();
+        ProcessUnload();
+    }
+
+    private void ProcessUnload()
+    {
+        foreach (var unloadEntity in _chunkBlockUnloadFilter)
+        {
+            ref var chunkBlockUnload = ref _blocksUnloadEvents.Get(unloadEntity);
+            var chunkInfo = _chunkPosToInfo[chunkBlockUnload.ChunkPos];
+            var entity = chunkInfo.PackedEntity.Unpack(world);
+            _chunkPosToInfo.Remove(chunkBlockUnload.ChunkPos);
+
+            world.DelEntity(entity);
+            _blocksUnloadEvents.Del(unloadEntity);
+        }
+    }
+
+    private void ProcessUpdates()
     {
         foreach (var updateEntity in _chunkBlockUpdatesFilter)
         {

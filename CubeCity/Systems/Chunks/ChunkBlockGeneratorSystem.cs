@@ -19,7 +19,7 @@ public struct ChunkBlocksFetchEvent
 
 public struct ChunkBlocksUnloadEvent
 {
-    public Vector2Int Pos;
+    public Vector2Int ChunkPos;
 }
 
 public class ChunkBlockUpdatingInfo
@@ -27,7 +27,7 @@ public class ChunkBlockUpdatingInfo
     public required EcsPackedEntity PackedEntity;
 }
 
-public class ChunkGeneratorSystem : IEcsRunSystem
+public class ChunkBlockGeneratorSystem : IEcsRunSystem
 {
     private readonly IProcessorPipe<BlockGeneratorRequest, BlockGeneratorResponse> _pipe;
     private readonly IChunkBlocksGenerator _blocksGenerator;
@@ -38,17 +38,16 @@ public class ChunkGeneratorSystem : IEcsRunSystem
     private readonly EcsPool<ChunkBlocksFetchEvent> _fetchEventsPool;
     private readonly EcsPool<ChunkBlocksUpdateEvent> _chunkBlocksFetchedPool;
 
-    public ChunkGeneratorSystem(EcsWorld world, IChunkBlocksGenerator blocksGenerator,
+    public ChunkBlockGeneratorSystem(EcsWorld world, IChunkBlocksGenerator blocksGenerator,
         BackgroundManager backgroundManager)
     {
-        _world = world;
         _blocksGenerator = blocksGenerator;
+        _pipe = backgroundManager.Create<BlockGeneratorRequest, BlockGeneratorResponse>(GenerateBlocks);
 
+        _world = world;
         _fetchEventsPool = world.GetPool<ChunkBlocksFetchEvent>();
         _fetchEventsFilter = world.Filter<ChunkBlocksFetchEvent>().End();
         _chunkBlocksFetchedPool = world.GetPool<ChunkBlocksUpdateEvent>();
-
-        _pipe = backgroundManager.Create<BlockGeneratorRequest, BlockGeneratorResponse>(GenerateBlocks);
     }
 
     public void Run(IEcsSystems systems)
