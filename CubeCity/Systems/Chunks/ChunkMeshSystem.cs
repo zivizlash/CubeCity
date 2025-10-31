@@ -22,7 +22,7 @@ public class ChunkMeshSystem : IEcsRunSystem
 
     private readonly EcsPool<RenderComponent> _renderPool;
     private readonly EcsPool<ChunkComponent> _chunkPool;
-    private readonly EcsPool<ChunkUpdateFlag> _chunkUpdateFlags;
+    private readonly EcsPool<ChunkBlocksUpdateFlag> _chunkUpdateFlags;
 
     public ChunkMeshSystem(EcsWorld world, BackgroundManager backgroundManager, 
         GraphicsDevice graphicsDevice, BlockType[] blockTypes, ILogger<ChunkMeshSystem> logger)
@@ -34,8 +34,8 @@ public class ChunkMeshSystem : IEcsRunSystem
         _pipe = backgroundManager.Create<ChunkMeshRequest, ChunkMeshResponse>(GenerateMesh);
         _renderPool = world.GetPool<RenderComponent>();
         _chunkPool = world.GetPool<ChunkComponent>();
-        _chunkUpdateFlags = world.GetPool<ChunkUpdateFlag>();
-        _chunkUpdateFlagsFilter = world.Filter<ChunkUpdateFlag>().End();
+        _chunkUpdateFlags = world.GetPool<ChunkBlocksUpdateFlag>();
+        _chunkUpdateFlagsFilter = world.Filter<ChunkBlocksUpdateFlag>().End();
     }
 
     public void Run(IEcsSystems systems)

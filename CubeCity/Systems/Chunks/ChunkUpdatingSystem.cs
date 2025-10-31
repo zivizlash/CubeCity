@@ -6,20 +6,22 @@ using System.Collections.Generic;
 
 namespace CubeCity.Systems.Chunks;
 
-public struct ChunkUpdateFlag
+public struct ChunkPhysicsUnloadEvent
 {
+    public Vector2Int ChunkPos;
 }
 
 public class ChunkUpdatingSystem(EcsWorld world) : IEcsRunSystem
 {
-    private readonly Dictionary<Vector2Int, ChunkBlockUpdatingInfo> _chunkPosToInfo = new(512);
+    private readonly Dictionary<Vector2Int, EcsPackedEntity> _chunkPosToInfo = new(512);
     private readonly EcsPool<ChunkBlocksUpdateEvent> _blocksUpdatesEvents = world.GetPool<ChunkBlocksUpdateEvent>();
-    private readonly EcsPool<ChunkBlocksUnloadEvent> _blocksUnloadEvents = world.GetPool<ChunkBlocksUnloadEvent>();
+    private readonly EcsPool<ChunkUnloadEvent> _blocksUnloadEvents = world.GetPool<ChunkUnloadEvent>();
     private readonly EcsPool<PositionComponent> _positionPool = world.GetPool<PositionComponent>();
     private readonly EcsPool<ChunkComponent> _chunkPool = world.GetPool<ChunkComponent>();
-    private readonly EcsPool<ChunkUpdateFlag> _chunkUpdateFlags = world.GetPool<ChunkUpdateFlag>();
+    private readonly EcsPool<ChunkBlocksUpdateFlag> _chunkUpdateFlags = world.GetPool<ChunkBlocksUpdateFlag>();
+    private readonly EcsPool<ChunkPhysicsUnloadEvent> _chunkPhysicsUnloadEvents = world.GetPool<ChunkPhysicsUnloadEvent>();
     private readonly EcsFilter _chunkBlockUpdatesFilter = world.Filter<ChunkBlocksUpdateEvent>().End();
-    private readonly EcsFilter _chunkBlockUnloadFilter = world.Filter<ChunkBlocksUnloadEvent>().End();
+    private readonly EcsFilter _chunkBlockUnloadFilter = world.Filter<ChunkUnloadEvent>().End();
 
     public void Run(IEcsSystems systems)
     {
@@ -32,12 +34,13 @@ public class ChunkUpdatingSystem(EcsWorld world) : IEcsRunSystem
         foreach (var unloadEntity in _chunkBlockUnloadFilter)
         {
             ref var chunkBlockUnload = ref _blocksUnloadEvents.Get(unloadEntity);
-            var chunkInfo = _chunkPosToInfo[chunkBlockUnload.ChunkPos];
-            var entity = chunkInfo.PackedEntity.Unpack(world);
+            var entity = _chunkPosToInfo[chunkBlockUnload.ChunkPos].Unpack(world);
             _chunkPosToInfo.Remove(chunkBlockUnload.ChunkPos);
 
             world.DelEntity(entity);
             _blocksUnloadEvents.Del(unloadEntity);
+
+            _chunkPhysicsUnloadEvents.Add(world.NewEntity());
         }
     }
 
@@ -47,9 +50,9 @@ public class ChunkUpdatingSystem(EcsWorld world) : IEcsRunSystem
         {
             ref var chunkBlockUpdate = ref _blocksUpdatesEvents.Get(updateEntity);
 
-            if (_chunkPosToInfo.TryGetValue(chunkBlockUpdate.ChunkPos, out var chunkInfo))
+            if (_chunkPosToInfo.TryGetValue(chunkBlockUpdate.ChunkPos, out var packedEntity))
             {
-                var entity = chunkInfo.PackedEntity.Unpack(world);
+                var entity = packedEntity.Unpack(world);
 
                 // todo: это пипяу, по факту он может участвовать в генерации меша
                 // и мне нужно использовать нормальные пулы с подсчетом ссылок 
@@ -66,10 +69,7 @@ public class ChunkUpdatingSystem(EcsWorld world) : IEcsRunSystem
             else
             {
                 var entity = world.NewEntity();
-                var packedEntity = world.PackEntity(entity);
-
-                chunkInfo = new ChunkBlockUpdatingInfo { PackedEntity = packedEntity };
-                _chunkPosToInfo.Add(chunkBlockUpdate.ChunkPos, chunkInfo);
+                _chunkPosToInfo.Add(chunkBlockUpdate.ChunkPos, world.PackEntity(entity));
 
                 ref var chunk = ref _chunkPool.Add(entity);
                 chunk.Blocks = chunkBlockUpdate.Blocks;

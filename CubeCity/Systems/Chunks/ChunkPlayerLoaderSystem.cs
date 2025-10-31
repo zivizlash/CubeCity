@@ -1,6 +1,6 @@
-﻿using CubeCity.GameObjects;
+﻿using CubeCity.Components;
+using CubeCity.GameObjects;
 using CubeCity.Services;
-using CubeCity.Systems.Chunks.Models;
 using CubeCity.Tools;
 using Leopotam.EcsLite;
 using System.Collections.Generic;
@@ -10,8 +10,8 @@ namespace CubeCity.Systems.Chunks;
 public class ChunkPlayerLoaderSystem(EcsWorld world, Camera camera,
     ChunkIsRequiredChecker chunkIsRequiredChecker) : IEcsRunSystem
 {
-    private readonly EcsPool<ChunkBlocksFetchEvent> _chunkLoadPool = world.GetPool<ChunkBlocksFetchEvent>();
-    private readonly EcsPool<ChunkBlocksUnloadEvent> _chunkUnloadPool = world.GetPool<ChunkBlocksUnloadEvent>();
+    private readonly EcsPool<ChunkFetchEvent> _chunkLoadPool = world.GetPool<ChunkFetchEvent>();
+    private readonly EcsPool<ChunkUnloadEvent> _chunkUnloadPool = world.GetPool<ChunkUnloadEvent>();
     private readonly HashSet<Vector2Int> _loadedChunks = new(128);
 
     private Vector2Int _playerChunkPos = new(int.MinValue, int.MinValue);
@@ -42,7 +42,7 @@ public class ChunkPlayerLoaderSystem(EcsWorld world, Camera camera,
                 {
                     var entity = world.NewEntity();
                     ref var request = ref _chunkLoadPool.Add(entity);
-                    request.Pos = chunkPos;
+                    request.ChunkPos = chunkPos;
                 }
             }
         }

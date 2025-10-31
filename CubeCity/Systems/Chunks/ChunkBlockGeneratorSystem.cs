@@ -1,31 +1,11 @@
-﻿using CubeCity.Generators.Chunks;
+﻿using CubeCity.Components;
+using CubeCity.Generators.Chunks;
 using CubeCity.Pools;
 using CubeCity.Threading;
 using CubeCity.Tools;
 using Leopotam.EcsLite;
 
 namespace CubeCity.Systems.Chunks;
-
-public struct ChunkBlocksUpdateEvent
-{
-    public Vector2Int ChunkPos;
-    public Pooled<ushort[,,]> Blocks;
-}
-
-public struct ChunkBlocksFetchEvent
-{
-    public Vector2Int Pos;
-}
-
-public struct ChunkBlocksUnloadEvent
-{
-    public Vector2Int ChunkPos;
-}
-
-public class ChunkBlockUpdatingInfo
-{
-    public required EcsPackedEntity PackedEntity;
-}
 
 public class ChunkBlockGeneratorSystem : IEcsRunSystem
 {
@@ -35,7 +15,7 @@ public class ChunkBlockGeneratorSystem : IEcsRunSystem
     private readonly EcsWorld _world;
 
     private readonly EcsFilter _fetchEventsFilter;
-    private readonly EcsPool<ChunkBlocksFetchEvent> _fetchEventsPool;
+    private readonly EcsPool<ChunkFetchEvent> _fetchEventsPool;
     private readonly EcsPool<ChunkBlocksUpdateEvent> _chunkBlocksFetchedPool;
 
     public ChunkBlockGeneratorSystem(EcsWorld world, IChunkBlocksGenerator blocksGenerator,
@@ -45,8 +25,8 @@ public class ChunkBlockGeneratorSystem : IEcsRunSystem
         _pipe = backgroundManager.Create<BlockGeneratorRequest, BlockGeneratorResponse>(GenerateBlocks);
 
         _world = world;
-        _fetchEventsPool = world.GetPool<ChunkBlocksFetchEvent>();
-        _fetchEventsFilter = world.Filter<ChunkBlocksFetchEvent>().End();
+        _fetchEventsPool = world.GetPool<ChunkFetchEvent>();
+        _fetchEventsFilter = world.Filter<ChunkFetchEvent>().End();
         _chunkBlocksFetchedPool = world.GetPool<ChunkBlocksUpdateEvent>();
     }
 
@@ -54,7 +34,7 @@ public class ChunkBlockGeneratorSystem : IEcsRunSystem
     {
         foreach (var entity in _fetchEventsFilter)
         {
-            var chunkPos = _fetchEventsPool.Get(entity).Pos;
+            var chunkPos = _fetchEventsPool.Get(entity).ChunkPos;
             _fetchEventsPool.Del(entity);
             _pipe.Enqueue(new BlockGeneratorRequest(chunkPos));
         }

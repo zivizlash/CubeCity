@@ -3,6 +3,7 @@ using CubeCity.Generators.Algs;
 using CubeCity.Generators.Chunks;
 using CubeCity.Generators.Pipelines;
 using CubeCity.Input;
+using CubeCity.Physics;
 using CubeCity.Services;
 using CubeCity.Systems.Chunks;
 using CubeCity.Systems.Input;
@@ -60,6 +61,7 @@ public class GameSystemsBuilder
             .Add(chunkSystems.ChunkPlayerLoader)
             .Add(chunkSystems.ChunkGeneratorSystem)
             .Add(chunkSystems.ChunkUpdatingSystem)
+            .Add(chunkSystems.ChunkPhysicsSystem)
             .Add(chunkSystems.ChunkMeshSystem)
             .Add(physicsSystem)
             .InitChain();
@@ -130,19 +132,25 @@ public class GameSystemsBuilder
             new PerlinChunkBlocksGenerator(new PerlinNoise2D()),
             new DiamondSquareChunkBlocksGenerator()]);
 
+        var physicsEngine = new PhysicsEngine();
+
         var chunkGenerator = new ChunkGenerator(services.Settings.Blocks, services.GameData.GraphicsDevice, chunkBlockGenerator);
         var playerLoader = new ChunkPlayerLoaderSystem(services.World, camera, chunkIsRequiredChecker);
         var chunkGeneratorSystem = new ChunkBlockGeneratorSystem(services.World, chunkBlockGenerator, services.BackgroundManager);
         var chunkUpdatingSystem = new ChunkUpdatingSystem(services.World);
+        var chunkPhysicsSystem = new ChunkPhysicsSystem(services.World, physicsEngine, services.KeyboardManager,
+            camera, services.GameData.LoggerFactory.CreateLogger<ChunkPhysicsSystem>());
         var chunkMeshSystem = new ChunkMeshSystem(services.World, services.BackgroundManager,
             services.GameData.GraphicsDevice, services.Settings.Blocks, 
             services.GameData.LoggerFactory.CreateLogger<ChunkMeshSystem>());
+
 
         return new ChunkSystemsData
         {
             ChunkPlayerLoader = playerLoader,
             ChunkGeneratorSystem = chunkGeneratorSystem,
             ChunkUpdatingSystem = chunkUpdatingSystem,
+            ChunkPhysicsSystem = chunkPhysicsSystem,
             ChunkMeshSystem = chunkMeshSystem
         };
     }
@@ -152,6 +160,7 @@ public class GameSystemsBuilder
         public required ChunkPlayerLoaderSystem ChunkPlayerLoader;
         public required ChunkBlockGeneratorSystem ChunkGeneratorSystem;
         public required ChunkUpdatingSystem ChunkUpdatingSystem;
+        public required ChunkPhysicsSystem ChunkPhysicsSystem;
         public required ChunkMeshSystem ChunkMeshSystem;
     }
 
