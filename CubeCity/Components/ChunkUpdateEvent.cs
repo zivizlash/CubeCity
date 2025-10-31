@@ -2,7 +2,7 @@
 
 namespace CubeCity.Components;
 
-public struct ChunkBlocksUpdateEvent
+public struct ChunkUpdateEvent
 {
     public Vector2Int ChunkPos;
     public Pooled<ushort[,,]> Blocks;

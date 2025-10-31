@@ -1,5 +1,5 @@
 ﻿namespace CubeCity.Components;
 
-public struct ChunkBlocksUpdateFlag
+public struct ChunkUpdateFlag
 {
 }

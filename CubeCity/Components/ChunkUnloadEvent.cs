@@ -6,3 +6,7 @@ public struct ChunkUnloadEvent
 {
     public Vector2Int ChunkPos;
 }
+
+public struct ChunkUnloadFlag
+{
+}

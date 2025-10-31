@@ -13,34 +13,33 @@ public class ChunkPhysicsSystem(EcsWorld world, PhysicsEngine physicsEngine,
 {
     private readonly EcsPool<ChunkComponent> _chunkPool = world.GetPool<ChunkComponent>();
     private readonly EcsPool<PositionComponent> _posPool = world.GetPool<PositionComponent>();
-    private readonly EcsFilter _chunkUpdateFlagFilter = world.Filter<ChunkBlocksUpdateFlag>().End();
-    private readonly EcsPool<ChunkPhysicsUnloadEvent> _chunkPhysicsUnloadEvents = world.GetPool<ChunkPhysicsUnloadEvent>();
-    private readonly EcsFilter _chunkPhysicsUnloadFilter = world.Filter<ChunkPhysicsUnloadEvent>().End();
+
+    private readonly EcsFilter _chunkUpdateFlagsFilter = world.Filter<ChunkUpdateFlag>().End();
+    private readonly EcsFilter _chunkUnloadFlagsFilter = world.Filter<ChunkUnloadFlag>().End();
 
     public void Run(IEcsSystems systems)
     {
-        foreach (var entity in _chunkUpdateFlagFilter)
+        foreach (var entity in _chunkUpdateFlagsFilter)
         {
             ref var chunk = ref _chunkPool.Get(entity);
             ref var inWorldPos = ref _posPool.Get(entity);
-            physicsEngine.AddChunkBlocks(chunk.Position, inWorldPos.Position, chunk.Blocks);
+            physicsEngine.AddOrUpdateChunkBlocks(chunk.Position, inWorldPos.Position, chunk.Blocks);
         }
 
-        foreach (var entity in _chunkPhysicsUnloadFilter)
+        foreach (var entity in _chunkUnloadFlagsFilter)
         {
-            ref var chunk = ref _chunkPhysicsUnloadEvents.Get(entity);
-            physicsEngine.RemoveChunkBlocks(chunk.ChunkPos);
-            world.DelEntity(entity);
+            ref var chunk = ref _chunkPool.Get(entity);
+            physicsEngine.RemoveChunkBlocks(chunk.Position);
         }
 
         if (keyboard.IsKeyPressed(Keys.N))
         {
-            var inter = physicsEngine.GetIntersection(camera.Position, camera.Forward);
+            var raycast = physicsEngine.Raycast(camera.Position, camera.Forward);
 
             logger.LogInformation("Matched Count: {MatchedCount}; Total Count: {TotalCount}",
-                inter.MatchedTriangles, inter.TotalTriangles);
+                raycast.MatchedCount, raycast.TotalCount);
 
-            if (inter.Result is IntersectionResult result)
+            if (raycast.Result is IntersectionResult result)
             {
                 var triangle = result.Triangle;
 

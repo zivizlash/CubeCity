@@ -1,9 +1,28 @@
-﻿using System;
-using System.Collections.Concurrent;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Concurrent;
 
 namespace CubeCity.Pools;
+
+public static class TexturePositionVerticesExtensions
+{
+    public static (VertexBuffer, IndexBuffer) ToBuffers(
+        this TexturePositionVertices mesh, GraphicsDevice graphicsDevice)
+    {
+        var indexBuffer = new IndexBuffer(graphicsDevice,
+            IndexElementSize.ThirtyTwoBits, mesh.TrianglesSize, BufferUsage.None);
+
+        indexBuffer.SetData(mesh.InternalTriangles, 0, mesh.TrianglesSize);
+
+        var vertexBuffer = new VertexBuffer(graphicsDevice,
+            typeof(VertexPositionTexture), mesh.TextureSize, BufferUsage.None);
+
+        vertexBuffer.SetData(mesh.InternalTexture, 0, mesh.TextureSize);
+
+        return (vertexBuffer, indexBuffer);
+    }
+}
 
 public sealed class TexturePositionVerticesMemoryPool : PoolBase<TexturePositionVertices>
 {

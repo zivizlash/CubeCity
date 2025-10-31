@@ -4,6 +4,12 @@ using System;
 
 namespace CubeCity.Tools;
 
+public static class Vector2IntExtensions
+{
+    public static Vector3 ToWorldChunkPosition(this Vector2Int chunkPos) => 
+        new(chunkPos.X * 16, 0, chunkPos.Y * 16);
+}
+
 public static class EcsSystemExtensions
 {
     public static IEcsSystems InitChain(this IEcsSystems systems)

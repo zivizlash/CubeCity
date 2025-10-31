@@ -20,8 +20,8 @@ public struct IntersectionResult
 public struct IntersectionInfo
 {
     public IntersectionResult? Result;
-    public int TotalTriangles;
-    public int MatchedTriangles;
+    public int TotalCount;
+    public int MatchedCount;
 }
 
 public class PhysicsEngine
@@ -33,7 +33,7 @@ public class PhysicsEngine
         _triangles = new(64);
     }
 
-    public IntersectionInfo GetIntersection(Vector3 orig, Vector3 dir)
+    public IntersectionInfo Raycast(Vector3 orig, Vector3 dir)
     {
         var intersections = new List<IntersectionResult>();
 
@@ -66,8 +66,8 @@ public class PhysicsEngine
 
         var result = new IntersectionInfo
         {
-            TotalTriangles = totalTriangles,
-            MatchedTriangles = matchedTriangles,    
+            TotalCount = totalTriangles,
+            MatchedCount = matchedTriangles,    
         };
 
         if (intersections.Count > 0)
@@ -78,7 +78,7 @@ public class PhysicsEngine
         return result;
     }
 
-    public void AddChunkBlocks(Vector2Int chunkPos, Vector3 inWorldPosition, Pooled<ushort[,,]> blocks)
+    public void AddOrUpdateChunkBlocks(Vector2Int chunkPos, Vector3 inWorldPosition, Pooled<ushort[,,]> blocks)
     {
         // 0:0 -> по чанк по иксу от -8 до 8, по зету от -8 до 8
         var factory = new ChunkMetadataFactory(blocks.Resource, inWorldPosition);

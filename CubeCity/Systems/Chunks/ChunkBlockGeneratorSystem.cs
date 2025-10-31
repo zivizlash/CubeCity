@@ -16,7 +16,7 @@ public class ChunkBlockGeneratorSystem : IEcsRunSystem
 
     private readonly EcsFilter _fetchEventsFilter;
     private readonly EcsPool<ChunkFetchEvent> _fetchEventsPool;
-    private readonly EcsPool<ChunkBlocksUpdateEvent> _chunkBlocksFetchedPool;
+    private readonly EcsPool<ChunkUpdateEvent> _chunkBlocksFetchedPool;
 
     public ChunkBlockGeneratorSystem(EcsWorld world, IChunkBlocksGenerator blocksGenerator,
         BackgroundManager backgroundManager)
@@ -27,7 +27,7 @@ public class ChunkBlockGeneratorSystem : IEcsRunSystem
         _world = world;
         _fetchEventsPool = world.GetPool<ChunkFetchEvent>();
         _fetchEventsFilter = world.Filter<ChunkFetchEvent>().End();
-        _chunkBlocksFetchedPool = world.GetPool<ChunkBlocksUpdateEvent>();
+        _chunkBlocksFetchedPool = world.GetPool<ChunkUpdateEvent>();
     }
 
     public void Run(IEcsSystems systems)
