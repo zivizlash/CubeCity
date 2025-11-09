@@ -1,7 +1,6 @@
 ﻿using CubeCity.Components;
 using CubeCity.Tools;
 using Leopotam.EcsLite;
-using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 
 namespace CubeCity.Systems.Chunks;

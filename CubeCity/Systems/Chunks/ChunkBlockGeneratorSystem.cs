@@ -52,8 +52,7 @@ public class ChunkBlockGeneratorSystem : IEcsRunSystem
     {
         var pooledBlocks = ChunkBlocksPool.Get(16, 128);
         _blocksGenerator.Generate(request.ChunkPos, pooledBlocks.Resource);
-        var response = new BlockGeneratorResponse(request.ChunkPos, pooledBlocks);
-        return response;
+        return new BlockGeneratorResponse(request.ChunkPos, pooledBlocks);
     }
 
     public record BlockGeneratorRequest(Vector2Int ChunkPos);

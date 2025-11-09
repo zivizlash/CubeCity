@@ -61,7 +61,7 @@ public class GameSystemsBuilder
             .Add(chunkSystems.ChunkPlayerLoader)
             .Add(chunkSystems.ChunkGeneratorSystem)
             .Add(chunkSystems.ChunkUpdatingSystem)
-            .Add(chunkSystems.ChunkPhysicsSystem)
+            //.Add(chunkSystems.ChunkPhysicsSystem)
             .Add(chunkSystems.ChunkMeshSystem)
             .Add(physicsSystem)
             .InitChain();

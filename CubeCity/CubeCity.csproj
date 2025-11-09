@@ -16,6 +16,15 @@
 	</PropertyGroup>
 	
 	<ItemGroup>
+	  <Compile Remove="Content\bin\**" />
+	  <Compile Remove="Content\obj\**" />
+	  <EmbeddedResource Remove="Content\bin\**" />
+	  <EmbeddedResource Remove="Content\obj\**" />
+	  <None Remove="Content\bin\**" />
+	  <None Remove="Content\obj\**" />
+	</ItemGroup>
+	
+	<ItemGroup>
 		<None Remove="Icon.ico" />
 		<None Remove="Icon.bmp" />
 	</ItemGroup>
@@ -45,6 +54,10 @@
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.10" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.10" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Shaders\" />
 	</ItemGroup>
 	
 	<Target Name="RestoreDotnetTools" BeforeTargets="CollectPackageReferences">

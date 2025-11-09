@@ -47,6 +47,7 @@ public class MainGame : Game
 
         _graphics.PreferredBackBufferWidth = 1920;
         _graphics.PreferredBackBufferHeight = 1080;
+        _graphics.GraphicsProfile = GraphicsProfile.HiDef;
 
         _graphics.ApplyChanges();
         base.Initialize();

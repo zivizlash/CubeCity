@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ecslite", "ecslite\ecslite\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CubeCity", "CubeCity\CubeCity.csproj", "{78117D83-B120-45BF-9AF5-6372A00E7AA2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LearnOpenTK", "LearnOpenTK\LearnOpenTK.csproj", "{AB88FD8F-F3D9-4CCB-9FB4-6A8AA9897380}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{78117D83-B120-45BF-9AF5-6372A00E7AA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{78117D83-B120-45BF-9AF5-6372A00E7AA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{78117D83-B120-45BF-9AF5-6372A00E7AA2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB88FD8F-F3D9-4CCB-9FB4-6A8AA9897380}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB88FD8F-F3D9-4CCB-9FB4-6A8AA9897380}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB88FD8F-F3D9-4CCB-9FB4-6A8AA9897380}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB88FD8F-F3D9-4CCB-9FB4-6A8AA9897380}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
