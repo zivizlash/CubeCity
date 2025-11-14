@@ -1,9 +1,8 @@
 ﻿using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
-using OpenTK.Windowing.Common.Input;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using SixLabors.ImageSharp;
 
 namespace LearnOpenTK;
 
@@ -29,8 +28,16 @@ public class VertexArrayObject : IDisposable
         GL.BindBuffer(BufferTarget.ElementArrayBuffer, Ebo);
         GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
 
-        GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
+        var stride = (3 + 3 + 2) * sizeof(float);
+
+        GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, stride, 0);
         GL.EnableVertexAttribArray(0);
+        
+        GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, stride, 3 * sizeof(float));
+        GL.EnableVertexAttribArray(1);
+
+        GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, stride, 6 * sizeof(float));
+        GL.EnableVertexAttribArray(2);
 
         GL.BindVertexArray(0);
     }
@@ -43,6 +50,14 @@ public class VertexArrayObject : IDisposable
     }
 
     bool _disposed = false;
+    
+    ~VertexArrayObject()
+    {
+        if (!_disposed)
+        {
+            Console.WriteLine($"Memory leak for vao {Vao}");
+        }
+    }
 
     public void Dispose()
     {
@@ -53,121 +68,6 @@ public class VertexArrayObject : IDisposable
             GL.DeleteVertexArray(Vao);
             GL.DeleteBuffer(Ebo);
             GL.DeleteBuffer(Vbo);
-
-            GC.SuppressFinalize(this);
-        }
-    }
-}
-
-public class Shader : IDisposable
-{
-    public string Name { get; }
-
-    private readonly int _vertShader;
-    private readonly int _fragShader;
-    private readonly int _handle;
-
-    private readonly Dictionary<string, int> _nameToLocation = new();
-
-    public Shader(string name)
-    {
-        Name = name;
-
-        var vertSource = File.ReadAllText($"{name}.vert");
-        var fragSource = File.ReadAllText($"{name}.frag");
-
-        _vertShader = GL.CreateShader(ShaderType.VertexShader);
-        GL.ShaderSource(_vertShader, vertSource);
-        CompileShader(_vertShader);
-
-        _fragShader = GL.CreateShader(ShaderType.FragmentShader);
-        GL.ShaderSource(_fragShader, fragSource);
-        CompileShader(_fragShader);
-
-        _handle = GL.CreateProgram();
-
-        GL.AttachShader(_handle, _vertShader);
-        GL.AttachShader(_handle, _fragShader);
-
-        GL.LinkProgram(_handle);
-
-        GL.DeleteShader(_vertShader);
-        GL.DeleteShader(_fragShader);
-
-        GL.GetProgram(_handle, GetProgramParameterName.LinkStatus, out var success);
-
-        if (success == 0)
-        {
-            string infoLog = GL.GetProgramInfoLog(_handle);
-            throw new Exception($"Error while linking program: {infoLog}");
-        }
-    }
-
-    private static void CompileShader(int shader)
-    {
-        GL.CompileShader(shader);
-        GL.GetShader(shader, ShaderParameter.CompileStatus, out int success);
-
-        if (success == 0)
-        {
-            string infoLog = GL.GetShaderInfoLog(shader);
-            throw new Exception($"Shader compilation error: {infoLog}");
-        }
-    }
-
-    public int GetAttribLocation(string attribName)
-    {
-        return GL.GetAttribLocation(_handle, attribName);
-    }
-
-    public int GetUniform(string name)
-    {
-        if (_nameToLocation.TryGetValue(name, out var location))
-        {
-            return location;
-        }
-
-        location = GL.GetUniformLocation(_handle, name);
-
-        if (location == -1)
-        {
-            throw new Exception($"Uniform {name} location not found");
-        }
-
-        _nameToLocation[name] = location;
-        return location;
-    }
-
-    public void Use()
-    {
-        CheckDisposed();
-        GL.UseProgram(_handle);
-    }
-
-    private bool _disposed = false;
-
-    private void CheckDisposed()
-    {
-        if (_disposed)
-        {
-            throw new ObjectDisposedException(nameof(Shader), $"Shader with name {Name} disposed");
-        }
-    }
-
-    ~Shader()
-    {
-        if (!_disposed)
-        {
-            Console.WriteLine($"GPU resource leak for shader {Name}");
-        }
-    }
-
-    public void Dispose()
-    {
-        if (!_disposed)
-        {
-            _disposed = true;
-            GL.DeleteProgram(_handle);
             GC.SuppressFinalize(this);
         }
     }
@@ -178,7 +78,7 @@ public class Game : GameWindow
     public Game(int width, int height, string title) : base(GameWindowSettings.Default, 
         new NativeWindowSettings { ClientSize = (width, height), Title = title })
     {
-        _shader = new("shader2");
+        _shader = new("shader4");
 
         float[] vertices = 
         [
@@ -190,27 +90,23 @@ public class Game : GameWindow
 
         float[] verticesWithColor =
         [
-            -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, //Bottom-left vertex
-            -0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 0.0f, //Bottom-right vertex
-             0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, //Top vertex
-             0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 1.0f, //Top vertex
+             0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // Верхний правый
+             0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // Нижний правый
+            -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // Нижний левый
+            -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // Верхний левый
         ];
         
-        float[] texCoords = [
-            0.0f, 0.0f,  // Нижний левый угол 
-            1.0f, 0.0f,  // Нижний правый угол
-            0.5f, 1.0f   // Верхняя центральная сторона
-        ];
-
         uint[] indices =
         [
-            0, 1, 2,
-            2, 1, 3
+            2, 3, 1,
+            1, 0, 3
         ];
 
-        _vao = new(vertices, indices);
+        _vao = new(verticesWithColor, indices);
+        _texture = new("texture1.png");
     }
 
+    private readonly Texture2D _texture;
     private readonly Shader _shader;
     private readonly VertexArrayObject _vao;
 
@@ -234,14 +130,32 @@ public class Game : GameWindow
 
         _elapsed += args.Time;
 
+        GL.ClearColor(0.0f, 0.0f, 0.0f, 1);
+        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+        var transform = Matrix4.CreateRotationZ((float)_elapsed * 2.0f);
+        transform *= Matrix4.CreateScale(0.5f, 0.5f, 0.5f);
+        transform *= Matrix4.CreateTranslation(MathF.Sin((float)_elapsed) / 2, MathF.Cos((float)_elapsed) / 2, 0);
+
+        _texture.Use();
         _shader.Use();
 
-        var location = _shader.GetUniform("ourColor");
-        var greenColor = Math.Sin(_elapsed);
-        GL.Uniform4(location, 0.0f, (float)greenColor, 0.0f, 1.0f);
+        // scale, rotation, translation
+
+        GL.UniformMatrix4(_shader.GetUniform("transform"), false, ref transform);
+
         _vao.Draw();
+        _texture.Unbind();
 
         SwapBuffers();
+    }
+
+    public override void Dispose()
+    {
+        _vao.Dispose();
+        _shader.Dispose();
+        _texture.Dispose();
+        base.Dispose();
     }
 }
 
@@ -249,6 +163,8 @@ internal class Program
 {
     static void Main(string[] args)
     {
+        Enumerable.Repeat("я люблю майнкрафт", 3).ToList().ForEach(Console.WriteLine);
+
         using var game = new Game(800, 600, "LearnOpenTK");
         game.Run();
     }

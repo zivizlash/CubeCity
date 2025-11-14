@@ -1,20 +1,39 @@
 ﻿using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using SixLabors.ImageSharp.Processing;
 
 namespace LearnOpenTK;
 
-public class ImageLoader
+public readonly record struct ByteImage(byte[] Data, int Width, int Height)
 {
-    public byte[] Load(string name)
-    {
-        var image = Image.Load<Rgba32>(name);
+    public readonly int Count = Width * Height;
+}
 
-        throw new NotImplementedException();
+public static class ImageLoader
+{
+    public static ByteImage LoadImageBytes(string name)
+    {
+        using var image = Image.Load<Rgba32>(name);
+
+        image.Mutate(m => m.Rotate(RotateMode.Rotate90));
+
+        var pixels = new byte[image.Width * image.Height * 4];
+
+        for (int w = 0, counter = 0; w < image.Width; w++)
+        {
+            for (int h = 0; h < image.Height; h++)
+            {
+                var pixel = image[w, h];
+
+                pixels[counter + 0] = pixel.R;
+                pixels[counter + 1] = pixel.G;
+                pixels[counter + 2] = pixel.B;
+                pixels[counter + 3] = pixel.A;
+
+                counter += 4;
+            }
+        }
+
+        return new ByteImage(pixels, image.Width, image.Height);
     }
 }
