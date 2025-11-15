@@ -13,28 +13,28 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="shader4.frag">
+    <None Update="Shaders\shader4.frag">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="shader4.vert">
+    <None Update="Shaders\shader4.vert">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="shader3.frag">
+    <None Update="Shaders\shader3.frag">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="shader3.vert">
+    <None Update="Shaders\shader3.vert">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="shader2.vert">
+    <None Update="Shaders\shader2.vert">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="shader2.frag">
+    <None Update="Shaders\shader2.frag">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="shader1.frag">
+    <None Update="Shaders\shader1.frag">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="shader1.vert">
+    <None Update="Shaders\shader1.vert">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="texture1.png">

@@ -6,87 +6,37 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace LearnOpenTK;
 
-public class VertexArrayObject : IDisposable
+public class Test
 {
-    private int Vao { get; }
-    private int Vbo { get; }
-    private int Ebo { get; }
-    private int Count { get; }
-
-    public VertexArrayObject(float[] vertices, uint[] indices)
+    public void Test1(int width, int height)
     {
-        Count = indices.Length;
-
-        Vao = GL.GenVertexArray();
-        GL.BindVertexArray(Vao);
-
-        Vbo = GL.GenBuffer();
-        GL.BindBuffer(BufferTarget.ArrayBuffer, Vbo);
-        GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
-
-        Ebo = GL.GenBuffer();
-        GL.BindBuffer(BufferTarget.ElementArrayBuffer, Ebo);
-        GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
-
-        var stride = (3 + 3 + 2) * sizeof(float);
-
-        GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, stride, 0);
-        GL.EnableVertexAttribArray(0);
-        
-        GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, stride, 3 * sizeof(float));
-        GL.EnableVertexAttribArray(1);
-
-        GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, stride, 6 * sizeof(float));
-        GL.EnableVertexAttribArray(2);
-
-        GL.BindVertexArray(0);
-    }
-
-    public void Draw()
-    {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-        GL.BindVertexArray(Vao);
-        GL.DrawElements(PrimitiveType.Triangles, Count, DrawElementsType.UnsignedInt, 0);
-    }
-
-    bool _disposed = false;
-    
-    ~VertexArrayObject()
-    {
-        if (!_disposed)
-        {
-            Console.WriteLine($"Memory leak for vao {Vao}");
-        }
-    }
-
-    public void Dispose()
-    {
-        if (!_disposed)
-        {
-            _disposed = true;
-            GL.BindVertexArray(0);
-            GL.DeleteVertexArray(Vao);
-            GL.DeleteBuffer(Ebo);
-            GL.DeleteBuffer(Vbo);
-            GC.SuppressFinalize(this);
-        }
+        var perspective = Matrix4.CreatePerspectiveFieldOfView(90, (float)width / height, 0.1f, 100f);
     }
 }
 
-public class Game : GameWindow
+public class BoxDrawable(VertexArrayObject vao, Shader shader, Texture2D? texture) : DrawableObject(vao, shader, texture)
 {
-    public Game(int width, int height, string title) : base(GameWindowSettings.Default, 
-        new NativeWindowSettings { ClientSize = (width, height), Title = title })
-    {
-        _shader = new("shader4");
+    private float _totalTime;
 
-        float[] vertices = 
-        [
-            -0.5f, -0.5f, 0.0f, //Bottom-left vertex
-            -0.5f,  0.5f, 0.0f, //Bottom-right vertex
-             0.5f, -0.5f, 0.0f, //Top vertex
-             0.5f,  0.5f, 0.0f  //Top vertex
-        ];
+    public override void Draw(float elapsed)
+    {
+        _totalTime += elapsed;
+
+        var transform = Matrix4.CreateRotationZ(_totalTime * 2.0f);
+        transform *= Matrix4.CreateScale(0.5f, 0.5f, 0.5f);
+        transform *= Matrix4.CreateTranslation(MathF.Sin(_totalTime) / 2, MathF.Cos(_totalTime) / 2, 0);
+
+        GL.UniformMatrix4(_shader.GetUniform("transform"), false, ref transform);
+
+        DrawInternal();
+    }
+}
+
+public class SimpleFactory
+{
+    public DrawableObject Create1()
+    {
+        var shader = new Shader("shader4");
 
         float[] verticesWithColor =
         [
@@ -95,20 +45,32 @@ public class Game : GameWindow
             -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // Нижний левый
             -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // Верхний левый
         ];
-        
+
         uint[] indices =
         [
             2, 3, 1,
             1, 0, 3
         ];
 
-        _vao = new(verticesWithColor, indices);
-        _texture = new("texture1.png");
+        var vao = new VertexArrayObject(verticesWithColor, indices);
+        var texture = new Texture2D("texture1.png");
+
+        return new BoxDrawable(vao, shader, texture);
+    }
+}
+
+public class Game : GameWindow
+{
+    public Game(int width, int height, string title) : base(GameWindowSettings.Default, 
+        new NativeWindowSettings { ClientSize = (width, height), Title = title })
+    {
+        _dos = new()
+        {
+            new SimpleFactory().Create1()
+        };
     }
 
-    private readonly Texture2D _texture;
-    private readonly Shader _shader;
-    private readonly VertexArrayObject _vao;
+    private List<DrawableObject> _dos;
 
     protected override void OnFramebufferResize(FramebufferResizeEventArgs e)
     {
@@ -116,46 +78,24 @@ public class Game : GameWindow
         GL.Viewport(0, 0, e.Width, e.Height);
     }
 
-    private double _elapsed;
-
     protected override void OnUpdateFrame(FrameEventArgs args)
     {
         base.OnUpdateFrame(args);
 
         if (KeyboardState.IsKeyDown(Keys.Escape))
         {
-            _vao.Dispose();
             Close();
         }
-
-        _elapsed += args.Time;
 
         GL.ClearColor(0.0f, 0.0f, 0.0f, 1);
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-        var transform = Matrix4.CreateRotationZ((float)_elapsed * 2.0f);
-        transform *= Matrix4.CreateScale(0.5f, 0.5f, 0.5f);
-        transform *= Matrix4.CreateTranslation(MathF.Sin((float)_elapsed) / 2, MathF.Cos((float)_elapsed) / 2, 0);
-
-        _texture.Use();
-        _shader.Use();
-
-        // scale, rotation, translation
-
-        GL.UniformMatrix4(_shader.GetUniform("transform"), false, ref transform);
-
-        _vao.Draw();
-        _texture.Unbind();
+        foreach (var drawable in _dos)
+        {
+            drawable.Draw((float)args.Time);
+        }
 
         SwapBuffers();
-    }
-
-    public override void Dispose()
-    {
-        _vao.Dispose();
-        _shader.Dispose();
-        _texture.Dispose();
-        base.Dispose();
     }
 }
 

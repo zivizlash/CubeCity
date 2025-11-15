@@ -16,8 +16,8 @@ public class Shader : IDisposable
     {
         Name = name;
 
-        var vertSource = File.ReadAllText($"{name}.vert");
-        var fragSource = File.ReadAllText($"{name}.frag");
+        var vertSource = File.ReadAllText($"Shaders\\{name}.vert");
+        var fragSource = File.ReadAllText($"Shaders\\{name}.frag");
 
         _vertShader = GL.CreateShader(ShaderType.VertexShader);
         GL.ShaderSource(_vertShader, vertSource);
