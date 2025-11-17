@@ -1,4 +1,5 @@
-﻿using OpenTK.Graphics.OpenGL4;
+﻿using LearnOpenTK.Components;
+using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
@@ -6,56 +7,67 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace LearnOpenTK;
 
-public class Test
+public class World
 {
-    public void Test1(int width, int height)
+    private readonly List<IUpdatable> _updatables = [];
+    private readonly List<IDrawable> _drawables = [];
+
+    public void Update(float elapsed)
     {
-        var perspective = Matrix4.CreatePerspectiveFieldOfView(90, (float)width / height, 0.1f, 100f);
+        foreach (var updatable in _updatables)
+        {
+            updatable.Update(elapsed);
+        }
+    }
+
+    public void Draw()
+    {
+        foreach (var drawable in _drawables)
+        {
+            drawable.Draw();
+        }
+    }
+
+    public World Add(IComponent component)
+    {
+        if (component is IUpdatable updatable)
+        {
+            _updatables.Add(updatable);
+        }
+
+        if (component is IDrawable drawable)
+        {
+            _drawables.Add(drawable);
+        }
+
+        return this;
+    }
+
+    public World Add(IEnumerable<IComponent> components)
+    {
+        foreach (var component in components)
+        {
+            Add(component);
+        }
+
+        return this;
     }
 }
 
-public class BoxDrawable(VertexArrayObject vao, Shader shader, Texture2D? texture) : DrawableObject(vao, shader, texture)
+public class WorldFactory
 {
-    private float _totalTime;
-
-    public override void Draw(float elapsed)
+    public World Create(GameWindow gameWindow)
     {
-        _totalTime += elapsed;
+        var camera = new Camera(gameWindow);
 
-        var transform = Matrix4.CreateRotationZ(_totalTime * 2.0f);
-        transform *= Matrix4.CreateScale(0.5f, 0.5f, 0.5f);
-        transform *= Matrix4.CreateTranslation(MathF.Sin(_totalTime) / 2, MathF.Cos(_totalTime) / 2, 0);
+        var factory = new BoxFactory();
+        var random = new Random(444);
 
-        GL.UniformMatrix4(_shader.GetUniform("transform"), false, ref transform);
+        var world = new World();
+        world.Add(camera);
+        world.Add(Enumerable.Repeat(0, 10).Select(_ => factory.Create2(camera).RandomizePos(random)));
 
-        DrawInternal();
-    }
-}
-
-public class SimpleFactory
-{
-    public DrawableObject Create1()
-    {
-        var shader = new Shader("shader4");
-
-        float[] verticesWithColor =
-        [
-             0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // Верхний правый
-             0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // Нижний правый
-            -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // Нижний левый
-            -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // Верхний левый
-        ];
-
-        uint[] indices =
-        [
-            2, 3, 1,
-            1, 0, 3
-        ];
-
-        var vao = new VertexArrayObject(verticesWithColor, indices);
-        var texture = new Texture2D("texture1.png");
-
-        return new BoxDrawable(vao, shader, texture);
+        return world;
     }
 }
 
@@ -64,18 +76,21 @@ public class Game : GameWindow
     public Game(int width, int height, string title) : base(GameWindowSettings.Default, 
         new NativeWindowSettings { ClientSize = (width, height), Title = title })
     {
-        _dos = new()
-        {
-            new SimpleFactory().Create1()
-        };
+        _world = new WorldFactory().Create(this);
     }
 
-    private List<DrawableObject> _dos;
+    private readonly World _world;
 
     protected override void OnFramebufferResize(FramebufferResizeEventArgs e)
     {
         base.OnFramebufferResize(e);
         GL.Viewport(0, 0, e.Width, e.Height);
+    }
+
+    protected override void OnLoad()
+    {
+        base.OnLoad();
+        GL.Enable(EnableCap.DepthTest);
     }
 
     protected override void OnUpdateFrame(FrameEventArgs args)
@@ -87,13 +102,11 @@ public class Game : GameWindow
             Close();
         }
 
-        GL.ClearColor(0.0f, 0.0f, 0.0f, 1);
+        GL.ClearColor(0.3f, 0.3f, 0.3f, 1);
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-        foreach (var drawable in _dos)
-        {
-            drawable.Draw((float)args.Time);
-        }
+        _world.Update((float)args.Time);
+        _world.Draw();
 
         SwapBuffers();
     }

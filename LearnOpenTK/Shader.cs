@@ -1,6 +1,38 @@
 ﻿using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 
 namespace LearnOpenTK;
+
+public readonly record struct UniformLocation(string Name, int Location);
+
+public abstract record UniformValue<TValue>(UniformLocation Location)
+{
+    public abstract void SetValue(TValue value);
+}
+
+public record UniformMatrix4(UniformLocation Location) : UniformValue<Matrix4>(Location)
+{
+    public override void SetValue(Matrix4 value)
+    {
+        GL.UniformMatrix4(Location.Location, false, ref value);
+    }
+}
+
+public class BasicShader : Shader
+{
+    public UniformMatrix4 Model { get; }
+    public UniformMatrix4 View { get; }
+    public UniformMatrix4 Projection { get; }
+    public UniformMatrix4 ProjectionView { get; }
+
+    public BasicShader(string name) : base(name)
+    {
+        Model = new UniformMatrix4(GetUniformUnsafe("model"));
+        View = new UniformMatrix4(GetUniformUnsafe("view"));
+        Projection = new UniformMatrix4(GetUniformUnsafe("projection"));
+        ProjectionView = new UniformMatrix4(GetUniformUnsafe("projectionView"));
+    }
+}
 
 public class Shader : IDisposable
 {
@@ -63,11 +95,24 @@ public class Shader : IDisposable
         return GL.GetAttribLocation(_handle, attribName);
     }
 
-    public int GetUniform(string name)
+    public UniformLocation GetUniformUnsafe(string name)
     {
         if (_nameToLocation.TryGetValue(name, out var location))
         {
-            return location;
+            return new UniformLocation(name, location);
+        }
+
+        location = GL.GetUniformLocation(_handle, name);
+
+        _nameToLocation[name] = location;
+        return new UniformLocation(name, location);
+    }
+
+    public UniformLocation GetUniform(string name)
+    {
+        if (_nameToLocation.TryGetValue(name, out var location))
+        {
+            return new UniformLocation(name, location);
         }
 
         location = GL.GetUniformLocation(_handle, name);
@@ -78,13 +123,19 @@ public class Shader : IDisposable
         }
 
         _nameToLocation[name] = location;
-        return location;
+        return new UniformLocation(name, location);
     }
 
     public void Use()
     {
         CheckDisposed();
         GL.UseProgram(_handle);
+    }
+
+    public void Unbind()
+    {
+        CheckDisposed();
+        GL.UseProgram(0);
     }
 
     private bool _disposed = false;
