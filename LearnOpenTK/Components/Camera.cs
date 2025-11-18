@@ -19,8 +19,6 @@ public interface IUpdatable : IComponent
 
 public class Camera : IUpdatable
 {
-    public Matrix4 ProjectionMatrix { get; private set; }
-    public Matrix4 ViewMatrix { get; private set; }
     public Matrix4 ProjectionViewMatrix { get; private set; }
 
     public Vector3 Position { get; set; }
@@ -44,12 +42,11 @@ public class Camera : IUpdatable
     {
         var size = _gameWindow.Size;
         var aspectRation = (float)size.X / size.Y;
-        ProjectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(90), aspectRation, 0.1f, 100f);
-        //ViewMatrix = Matrix4.CreateTranslation(Position);
-
+        var projectionMatrix = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(90), aspectRation, 0.1f, 100f);
+        
         var pos = new Vector3(MathF.Sin(_total / 2) * 8, 0, MathF.Cos(_total / 2) * 8);
-        ViewMatrix = Matrix4.LookAt(pos, Vector3.Zero, Vector3.UnitY);
+        var viewMatrix = Matrix4.LookAt(pos, Vector3.Zero, Vector3.UnitY);
 
-        ProjectionViewMatrix = ViewMatrix * ProjectionMatrix;
+        ProjectionViewMatrix = viewMatrix * projectionMatrix;
     }
 }

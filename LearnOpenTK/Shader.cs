@@ -10,6 +10,14 @@ public abstract record UniformValue<TValue>(UniformLocation Location)
     public abstract void SetValue(TValue value);
 }
 
+public record UniformVector3(UniformLocation Location) : UniformValue<Vector3>(Location)
+{
+    public override void SetValue(Vector3 value)
+    {
+        GL.Uniform3(Location.Location, value);
+    }
+}
+
 public record UniformMatrix4(UniformLocation Location) : UniformValue<Matrix4>(Location)
 {
     public override void SetValue(Matrix4 value)
@@ -21,16 +29,12 @@ public record UniformMatrix4(UniformLocation Location) : UniformValue<Matrix4>(L
 public class BasicShader : Shader
 {
     public UniformMatrix4 Model { get; }
-    public UniformMatrix4 View { get; }
-    public UniformMatrix4 Projection { get; }
-    public UniformMatrix4 ProjectionView { get; }
+    public UniformMatrix4 Transform { get; }
 
     public BasicShader(string name) : base(name)
     {
         Model = new UniformMatrix4(GetUniformUnsafe("model"));
-        View = new UniformMatrix4(GetUniformUnsafe("view"));
-        Projection = new UniformMatrix4(GetUniformUnsafe("projection"));
-        ProjectionView = new UniformMatrix4(GetUniformUnsafe("projectionView"));
+        Transform = new UniformMatrix4(GetUniformUnsafe("transform"));
     }
 }
 
@@ -42,7 +46,7 @@ public class Shader : IDisposable
     private readonly int _fragShader;
     private readonly int _handle;
 
-    private readonly Dictionary<string, int> _nameToLocation = new();
+    private readonly Dictionary<string, int> _nameToLocation = [];
 
     public Shader(string name)
     {

@@ -2,11 +2,10 @@
 
 namespace LearnOpenTK;
 
-public class DrawableObject(VertexArrayObject vao, BasicShader shader, Texture2D? texture) : IDrawable, IDisposable
+public class DrawableObject(IVertexArrayObject vao, Texture2D? texture) : IDrawable, IDisposable
 {
     private bool _disposed;
-    protected readonly BasicShader Shader = shader;
-
+    
     public virtual void Draw()
     {
         DrawInternal();
@@ -16,7 +15,6 @@ public class DrawableObject(VertexArrayObject vao, BasicShader shader, Texture2D
     {
         ThrowIfDisposed();
         texture?.Use();
-        Shader.Use();
         vao.Draw();
         texture?.Unbind();
     }
@@ -33,7 +31,6 @@ public class DrawableObject(VertexArrayObject vao, BasicShader shader, Texture2D
             _disposed = true;
             vao.Dispose();
             texture?.Dispose();
-            Shader.Dispose();
         }
     }
 }
