@@ -1,6 +1,7 @@
 ﻿using LearnOpenTK.Components;
+using LearnOpenTK.Vaos;
 
-namespace LearnOpenTK;
+namespace LearnOpenTK.Drawables;
 
 public class DrawableObject(IVertexArrayObject vao, Texture2D? texture) : IDrawable, IDisposable
 {

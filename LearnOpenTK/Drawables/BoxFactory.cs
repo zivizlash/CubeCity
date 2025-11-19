@@ -1,10 +1,11 @@
 ﻿using LearnOpenTK.Components;
+using LearnOpenTK.Vaos;
 
-namespace LearnOpenTK;
+namespace LearnOpenTK.Drawables;
 
 public class BoxFactory
 {
-    public BoxDrawable Create(Camera camera, Shader shader)
+    public BoxDrawable Create(Camera camera, BasicShader shader)
     {
         float[] verticesWithUv =
         [
@@ -51,7 +52,9 @@ public class BoxFactory
             -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
         ];
 
-        var vao = new VertexArrayObject(verticesWithUv, null);
+        // VerticesData.GetTexturedVertices();
+
+        var vao = new TexturedVertexArrayObject(verticesWithUv, null);
         var texture = new Texture2D("texture1.png");
 
         return new BoxDrawable(vao, texture, shader);

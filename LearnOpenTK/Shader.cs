@@ -1,30 +1,7 @@
-﻿using OpenTK.Graphics.OpenGL4;
-using OpenTK.Mathematics;
+﻿using LearnOpenTK.Uniforms;
+using OpenTK.Graphics.OpenGL4;
 
 namespace LearnOpenTK;
-
-public readonly record struct UniformLocation(string Name, int Location);
-
-public abstract record UniformValue<TValue>(UniformLocation Location)
-{
-    public abstract void SetValue(TValue value);
-}
-
-public record UniformVector3(UniformLocation Location) : UniformValue<Vector3>(Location)
-{
-    public override void SetValue(Vector3 value)
-    {
-        GL.Uniform3(Location.Location, value);
-    }
-}
-
-public record UniformMatrix4(UniformLocation Location) : UniformValue<Matrix4>(Location)
-{
-    public override void SetValue(Matrix4 value)
-    {
-        GL.UniformMatrix4(Location.Location, false, ref value);
-    }
-}
 
 public class BasicShader : Shader
 {

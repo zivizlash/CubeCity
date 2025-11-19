@@ -1,7 +1,8 @@
-﻿using LearnOpenTK.Components;
+﻿using LearnOpenTK.Uniforms;
+using LearnOpenTK.Vaos;
 using OpenTK.Mathematics;
 
-namespace LearnOpenTK;
+namespace LearnOpenTK.Drawables;
 
 public class LightsourceDrawable(IVertexArrayObject vao, BasicShader shader)
     : DrawableObject(vao, null)
@@ -17,29 +18,6 @@ public class LightsourceDrawable(IVertexArrayObject vao, BasicShader shader)
         shader.Model.SetValue(Matrix4.CreateTranslation(Position));
         _objectColor.SetValue(new Vector3(0.77f, 0.1f, 0.1f));
         _lightColor.SetValue(Vector3.One);
-        DrawInternal();
-    }
-}
-
-public class BoxDrawable(IVertexArrayObject vao, Texture2D? texture, BasicShader shader) 
-    : DrawableObject(vao, texture), IUpdatable
-{
-    public Vector3 Position { get; set; }
-
-    private float _time;
-
-    public void Update(float elapsed)
-    {
-        _time += elapsed;
-    }
-
-    public override void Draw()
-    {
-        shader.Use();
-        shader.Model.SetValue(Matrix4.CreateRotationX(MathF.Sin(_time) * 3)
-            * Matrix4.CreateRotationY(MathF.Cos(_time) * 3)
-            * Matrix4.CreateTranslation(Position));
-
         DrawInternal();
     }
 }

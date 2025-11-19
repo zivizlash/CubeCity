@@ -12,7 +12,7 @@ public class Game : GameWindow
         new NativeWindowSettings { ClientSize = (width, height), Title = title })
     {
         _shaders = new Shaders();
-        (_world, _camera) = new WorldFactory().Create(this, _shaders.Basic);
+        (_world, _camera) = new WorldFactory().Create(this, _shaders);
     }
 
     private readonly Shaders _shaders;
