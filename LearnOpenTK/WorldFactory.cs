@@ -127,7 +127,7 @@ public class LightsourceFactory
 
         return new LightsourceDrawable(vao, shaders.Lightsource)
         { 
-            Position = new Vector3(0, 5, -10)
+            Position = shaders.LightPos
         };
     }
 }
