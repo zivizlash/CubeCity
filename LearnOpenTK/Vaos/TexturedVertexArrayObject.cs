@@ -9,9 +9,9 @@ public class TexturedVertexArrayObject : IVertexArrayObject
     private int? Ebo { get; }
     private int Count { get; }
 
-    public TexturedVertexArrayObject(float[] vertices, uint[]? indices)
+    public TexturedVertexArrayObject(float[] vertices, uint[]? indices, int count)
     {
-        Count = indices?.Length ?? vertices.Length / 5;
+        Count = count;
 
         Vao = GL.GenVertexArray();
         GL.BindVertexArray(Vao);
@@ -27,13 +27,16 @@ public class TexturedVertexArrayObject : IVertexArrayObject
             GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
         }
 
-        var stride = (3 + 2) * sizeof(float);
+        var stride = (3 + 2 + 3) * sizeof(float);
 
         GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, stride, 0);
         GL.EnableVertexAttribArray(0);
 
         GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, stride, 3 * sizeof(float));
         GL.EnableVertexAttribArray(1);
+
+        GL.VertexAttribPointer(2, 3, VertexAttribPointerType.Float, false, stride, 5 * sizeof(float));
+        GL.EnableVertexAttribArray(2);
 
         GL.BindVertexArray(0);
     }
@@ -42,15 +45,7 @@ public class TexturedVertexArrayObject : IVertexArrayObject
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         GL.BindVertexArray(Vao);
-
-        if (Ebo is not null)
-        {
-            GL.DrawElements(PrimitiveType.Triangles, Count, DrawElementsType.UnsignedInt, 0);
-        }
-        else
-        {
-            GL.DrawArrays(PrimitiveType.Triangles, 0, Count);
-        }
+        GL.DrawArrays(PrimitiveType.Triangles, 0, Count);
     }
 
     bool _disposed = false;
