@@ -10,8 +10,8 @@ public class BasicShader : Shader
 
     public BasicShader(string name) : base(name)
     {
-        Model = new UniformMatrix4(GetUniformUnsafe("model"));
-        Transform = new UniformMatrix4(GetUniformUnsafe("transform"));
+        Model = new UniformMatrix4(GetUniform("model"));
+        Transform = new UniformMatrix4(GetUniform("transform"));
     }
 }
 

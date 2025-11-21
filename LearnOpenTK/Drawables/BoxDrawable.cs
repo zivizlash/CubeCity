@@ -12,8 +12,8 @@ public class BoxDrawable(IVertexArrayObject vao, Texture2D? texture, BasicShader
 
     private float _time;
 
-    private readonly UniformVector3 _lightColor = new(shader.GetUniform("lightColor"));
-    private readonly UniformVector3 _lightPos = new(shader.GetUniform("lightPos"));
+    private readonly UniformVector3 _lightColor = new(shader.GetUniform("light.diffuse"));
+    private readonly UniformVector3 _lightPos = new(shader.GetUniform("light.position"));
 
     public void Update(float elapsed)
     {
