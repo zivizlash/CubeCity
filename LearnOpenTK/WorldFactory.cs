@@ -29,11 +29,14 @@ public class WorldFactory
 
         var world = new World();
 
+        var lightingContainer = new LightingContainer();
+
         var lightSource = new LightsourceFactory().Create(shaders);
 
         world.Add(camera);
         world.Add(lightSource);
-        world.Add(Enumerable.Repeat(0, 10).Select(_ => RandomizePos(boxFactory.Create(camera, shaders, lightSource), random)));
+        world.Add(Enumerable.Repeat(0, 10).Select(_ => 
+            RandomizePos(boxFactory.Create(camera, shaders, lightSource, lightingContainer), random)));
 
         return (world, camera);
     }

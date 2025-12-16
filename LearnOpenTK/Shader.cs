@@ -89,6 +89,17 @@ public class Shader : IDisposable
         return new UniformLocation(name, location);
     }
 
+    private static string GetName(string? prefix, string name)
+    {
+        var dot = string.IsNullOrEmpty(prefix) ? "" : ".";
+        return $"{prefix}{dot}{name}";
+    }
+
+    public UniformLocation GetUniform(string? prefix, string name)
+    {
+        return GetUniform(GetName(prefix, name));
+    }
+
     public UniformLocation GetUniform(string name)
     {
         if (_nameToLocation.TryGetValue(name, out var location))
