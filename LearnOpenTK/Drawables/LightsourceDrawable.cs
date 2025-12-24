@@ -1,14 +1,10 @@
 ﻿using LearnOpenTK.Components;
-using LearnOpenTK.Uniforms;
+using LearnOpenTK.ShaderUniforms;
+using LearnOpenTK.ShaderUniforms.Uniforms;
 using LearnOpenTK.Vaos;
 using OpenTK.Mathematics;
 
 namespace LearnOpenTK.Drawables;
-
-public interface IHasPosition
-{
-    Vector3 Position { get; }
-}
 
 public class LightsourceDrawable(IVertexArrayObject vao, BasicShader shader)
     : DrawableObject(vao, null), IHasPosition, IUpdatable

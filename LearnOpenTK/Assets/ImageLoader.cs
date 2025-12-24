@@ -2,7 +2,7 @@
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
-namespace LearnOpenTK;
+namespace LearnOpenTK.Assets;
 
 public readonly record struct ByteImage(byte[] Data, int Width, int Height)
 {

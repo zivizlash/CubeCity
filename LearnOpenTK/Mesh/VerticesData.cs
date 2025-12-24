@@ -1,6 +1,6 @@
 ﻿using OpenTK.Mathematics;
 
-namespace LearnOpenTK;
+namespace LearnOpenTK.Mesh;
 
 public static class VerticesData
 {

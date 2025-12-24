@@ -1,6 +1,6 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 
-namespace LearnOpenTK.Uniforms;
+namespace LearnOpenTK.ShaderUniforms.Uniforms;
 
 public record Uniform1(UniformLocation Location) : UniformValue<float>(Location)
 {

@@ -1,7 +1,7 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
-namespace LearnOpenTK.Uniforms;
+namespace LearnOpenTK.ShaderUniforms.Uniforms;
 
 public record UniformVector3(UniformLocation Location) : UniformValue<Vector3>(Location)
 {

@@ -3,20 +3,6 @@ using OpenTK.Windowing.Desktop;
 
 namespace LearnOpenTK.Components;
 
-public interface IComponent
-{
-}
-
-public interface IDrawable : IComponent
-{
-    void Draw();
-}
-
-public interface IUpdatable : IComponent
-{
-    void Update(float elapsed);
-}
-
 public class Camera : IUpdatable
 {
     public Matrix4 ProjectionViewMatrix { get; private set; }

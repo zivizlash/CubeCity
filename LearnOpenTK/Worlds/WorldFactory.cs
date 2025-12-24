@@ -1,9 +1,11 @@
 ﻿using LearnOpenTK.Components;
 using LearnOpenTK.Drawables;
+using LearnOpenTK.Mesh;
+using LearnOpenTK.ShaderUniforms;
 using LearnOpenTK.Vaos;
 using OpenTK.Windowing.Desktop;
 
-namespace LearnOpenTK;
+namespace LearnOpenTK.Worlds;
 
 public class LightsourceFactory
 {

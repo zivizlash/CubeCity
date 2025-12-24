@@ -1,4 +1,6 @@
 ﻿using LearnOpenTK.Components;
+using LearnOpenTK.Mesh;
+using LearnOpenTK.ShaderUniforms;
 
 namespace LearnOpenTK.Drawables;
 

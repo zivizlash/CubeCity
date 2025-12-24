@@ -1,19 +1,7 @@
-﻿using LearnOpenTK.Uniforms;
+﻿using LearnOpenTK.ShaderUniforms.Uniforms;
 using OpenTK.Graphics.OpenGL4;
 
-namespace LearnOpenTK;
-
-public class BasicShader : Shader
-{
-    public UniformMatrix4 Model { get; }
-    public UniformMatrix4 Transform { get; }
-
-    public BasicShader(string name) : base(name)
-    {
-        Model = new UniformMatrix4(GetUniform("model"));
-        Transform = new UniformMatrix4(GetUniform("transform"));
-    }
-}
+namespace LearnOpenTK.ShaderUniforms;
 
 public class Shader : IDisposable
 {

@@ -1,4 +1,4 @@
-﻿namespace LearnOpenTK.Uniforms;
+﻿namespace LearnOpenTK.ShaderUniforms.Uniforms;
 
 public readonly record struct UniformLocation(string Name, int Location)
 {

@@ -1,4 +1,5 @@
 ﻿using LearnOpenTK.Components;
+using LearnOpenTK.Mesh;
 using LearnOpenTK.Vaos;
 
 namespace LearnOpenTK.Drawables;

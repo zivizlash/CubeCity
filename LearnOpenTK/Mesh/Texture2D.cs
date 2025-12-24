@@ -1,6 +1,7 @@
-﻿using OpenTK.Graphics.OpenGL4;
+﻿using LearnOpenTK.Assets;
+using OpenTK.Graphics.OpenGL4;
 
-namespace LearnOpenTK;
+namespace LearnOpenTK.Mesh;
 
 public class Texture2D : IDisposable
 {

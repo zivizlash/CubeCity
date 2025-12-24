@@ -1,6 +1,6 @@
 ﻿using LearnOpenTK.Components;
 
-namespace LearnOpenTK;
+namespace LearnOpenTK.Worlds;
 
 public class World
 {

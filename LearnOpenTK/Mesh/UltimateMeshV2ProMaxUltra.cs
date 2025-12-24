@@ -1,37 +1,6 @@
 ﻿using OpenTK.Graphics.OpenGL4;
-using OpenTK.Mathematics;
-using System.Runtime.InteropServices;
 
-namespace LearnOpenTK;
-
-public enum TextureType
-{
-    Diffuse = 1
-}
-
-[StructLayout(LayoutKind.Explicit)]
-public struct Vertex
-{
-    public const int PositionOffset = sizeof(float) * 0;
-    public const int TexCoordsOffset = sizeof(float) * 3;
-    public const int NormalOffset = sizeof(float) * 5;
-    public const int Size = sizeof(float) * 8;
-
-    [FieldOffset(PositionOffset)]
-    public Vector3 Position;
-
-    [FieldOffset(TexCoordsOffset)]
-    public Vector2 TexCoords;
-
-    [FieldOffset(NormalOffset)]
-    public Vector3 Normal;
-}
-
-public struct Texture
-{
-    public int Id;
-    public TextureType Type;
-}
+namespace LearnOpenTK.Mesh;
 
 public class UltimateMeshV2ProMaxUltra
 {
@@ -96,19 +65,5 @@ public class UltimateMeshV2ProMaxUltra
         }
 
         GL.BindVertexArray(0);
-    }
-}
-
-public class Shaders
-{
-    public readonly BasicShader Lightsource;
-    public readonly BasicShader Basic;
-
-    public static readonly Vector3 LightPos = new(0, 7, 0);
-
-    public Shaders()
-    {
-        Lightsource = new BasicShader("light_source");
-        Basic = new BasicShader("shader5");
     }
 }

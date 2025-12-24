@@ -1,4 +1,7 @@
 ﻿using LearnOpenTK.Components;
+using LearnOpenTK.Mesh;
+using LearnOpenTK.ShaderUniforms;
+using LearnOpenTK.Worlds;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;

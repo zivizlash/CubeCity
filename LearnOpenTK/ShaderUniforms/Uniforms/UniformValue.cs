@@ -1,4 +1,4 @@
-﻿namespace LearnOpenTK.Uniforms;
+﻿namespace LearnOpenTK.ShaderUniforms.Uniforms;
 
 public abstract record UniformValue<TValue>(UniformLocation Location)
 {
