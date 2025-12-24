@@ -23,20 +23,21 @@ public class WorldFactory
     public (World, Camera) Create(GameWindow gameWindow, Shaders shaders)
     {
         var camera = new Camera(gameWindow);
-
-        var boxFactory = new BoxFactory();
         var random = new Random(444);
-
         var world = new World();
 
-        var lightingContainer = new LightingContainer();
-
+        var lightingSystem = LightingSystemFactory.Create();
         var lightSource = new LightsourceFactory().Create(shaders);
+
+        var boxes = Enumerable.Repeat(0, 10).Select(_ => 
+            RandomizePos(BoxFactory.CreateDrawable(camera, shaders), random));
+
+        var lightingMeshUpdateSystem = new LightingUpdateMeshSystem(lightingSystem, shaders.Basic, lightSource);
 
         world.Add(camera);
         world.Add(lightSource);
-        world.Add(Enumerable.Repeat(0, 10).Select(_ => 
-            RandomizePos(boxFactory.Create(camera, shaders, lightSource, lightingContainer), random)));
+        world.Add(lightingMeshUpdateSystem);
+        world.Add(boxes);
 
         return (world, camera);
     }

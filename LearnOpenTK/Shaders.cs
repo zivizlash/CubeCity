@@ -4,6 +4,11 @@ using System.Runtime.InteropServices;
 
 namespace LearnOpenTK;
 
+public enum TextureType
+{
+    Diffuse = 1
+}
+
 [StructLayout(LayoutKind.Explicit)]
 public struct Vertex
 {
@@ -24,31 +29,31 @@ public struct Vertex
 
 public struct Texture
 {
-    public uint Id;
-    public string Type;
+    public int Id;
+    public TextureType Type;
 }
 
 public class UltimateMeshV2ProMaxUltra
 {
     public required Vertex[] Vertices;
-    public required uint[] Indices;
+    public required uint[]? Indices;
     public required Texture[] Textures;
 
-    private int Vao, Vbo, Ebo;
+    private int _vao, _vbo, _ebo;
 
     public void Setup()
     {
-        Vao = GL.GenVertexArray();
-        GL.BindVertexArray(Vao);
+        _vao = GL.GenVertexArray();
+        GL.BindVertexArray(_vao);
 
-        Vbo = GL.GenBuffer();
-        GL.BindBuffer(BufferTarget.ArrayBuffer, Vbo);
+        _vbo = GL.GenBuffer();
+        GL.BindBuffer(BufferTarget.ArrayBuffer, _vbo);
         GL.BufferData(BufferTarget.ArrayBuffer, Vertices.Length * Vertex.Size, Vertices, BufferUsageHint.StaticDraw);
 
         if (Indices is not null)
         {
-            Ebo = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, Ebo);
+            _ebo = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, _ebo);
             GL.BufferData(BufferTarget.ElementArrayBuffer, Indices.Length * sizeof(uint), Indices, BufferUsageHint.StaticDraw);
         }
 
@@ -64,18 +69,33 @@ public class UltimateMeshV2ProMaxUltra
         GL.BindVertexArray(0);
     }
 
-    public void Draw(Shader shader)
+    public void Draw()
     {
-        GL.BindVertexArray(Vao);
+        GL.BindVertexArray(_vao);
+/*
+        int diffuseTextureNumber = 0;
 
-        if (Ebo != 0)
+        for (int i = 0; i < Textures.Length; i++)
         {
-            GL.DrawArrays(PrimitiveType.Triangles, 0, Vertices.Length);
+            GL.ActiveTexture(TextureUnit.Texture0 + i);
+            var texture = Textures[i];
+            GL.Uniform1(shader.GetUniform("material.texture_diffuse" + diffuseTextureNumber++), i);
+            GL.BindTexture(TextureTarget.Texture2D, texture.Id);
+        }
+
+        GL.ActiveTexture(TextureUnit.Texture0);
+*/
+
+        if (Indices is not null)
+        {
+            GL.DrawElements(PrimitiveType.Triangles, Indices.Length, DrawElementsType.UnsignedInt, 0);
         }
         else
         {
             GL.DrawArrays(PrimitiveType.Triangles, 0, Vertices.Length);
         }
+
+        GL.BindVertexArray(0);
     }
 }
 

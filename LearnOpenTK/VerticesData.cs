@@ -142,6 +142,29 @@ public static class VerticesData
         return [.. result];
     }
 
+    public static Vertex[] GetTextureNormalsVertices2()
+    {
+        var normals = CalculateNormals();
+        var result = new List<Vertex>();
+
+        for (int verticeIndex = 0, uvIndex = 0; verticeIndex < _vertices.Length; verticeIndex += 3, uvIndex += 2)
+        {
+            var vertex = new Vertex
+            {
+                TexCoords = new Vector2(_uvs[uvIndex + 0], _uvs[uvIndex + 1]),
+                Normal = normals[verticeIndex / 9],
+                Position = new Vector3(
+                    _vertices[verticeIndex + 0],
+                    _vertices[verticeIndex + 1],
+                    _vertices[verticeIndex + 2])
+            };
+
+            result.Add(vertex);
+        }
+
+        return [.. result];
+    }
+    
     public static float[] GetColoredVertices(Vector3 color)
     {
         var result = new List<float>();

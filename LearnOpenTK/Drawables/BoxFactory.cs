@@ -1,17 +1,35 @@
 ﻿using LearnOpenTK.Components;
-using LearnOpenTK.Vaos;
 
 namespace LearnOpenTK.Drawables;
 
-public class BoxFactory
+public static class BoxFactory
 {
-    public BoxDrawable Create(Camera camera, Shaders shaders, IHasPosition lightSourcePos, LightingContainer container)
+    public static readonly Texture2D Texture = new("texture1.png");
+
+    public static BoxDrawable CreateDrawable(Camera camera, Shaders shaders)
     {
-        var vertices = VerticesData.GetTextureNormalsVertices();
+        var mesh = CreateMesh(camera);
+        mesh.Setup();
+        return new BoxDrawable(shaders.Basic, mesh);
+    }
 
-        var vao = new TexturedVertexArrayObject(vertices, null, 36);
-        var texture = new Texture2D("texture1.png");
+    public static UltimateMeshV2ProMaxUltra CreateMesh(Camera camera)
+    {
+        var vertices = VerticesData.GetTextureNormalsVertices2();
 
-        return new BoxDrawable(vao, texture, shaders.Basic, lightSourcePos, container);
+        var texture = new Texture
+        {
+            Id = Texture.Texture,
+            Type = TextureType.Diffuse
+        };
+
+        var mesh = new UltimateMeshV2ProMaxUltra
+        {
+            Indices = null,
+            Textures = [texture],
+            Vertices = vertices
+        };
+
+        return mesh;
     }
 }

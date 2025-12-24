@@ -1,5 +1,4 @@
 ﻿using LearnOpenTK.Components;
-using LearnOpenTK.Uniforms;
 using LearnOpenTK.Vaos;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
@@ -43,29 +42,63 @@ public class PointLight
     }
 }
 
-public class LightingContainer
+public static class LightingSystemFactory
 {
-    public List<DirectionalLight> DirectionalLights { get; } = new();
-    public List<PointLight> PointLights { get; } = new();
-
-    public LightingContainer()
+    public static LightingSystem Create()
     {
-        DirectionalLights.Add(new DirectionalLight());
-        PointLights.Add(new PointLight
+        var lightingSystem = new LightingSystem();
+
+        lightingSystem.AddPointLight(new PointLight
         {
             Diffuse = new Vector3(0.8f, 0.5f, 0.5f)
         });
-        PointLights.Add(new PointLight
+        lightingSystem.AddPointLight(new PointLight
         {
             Diffuse = new Vector3(0.4f, 0.7f, 0.5f),
             Position = new Vector3(1.4f, 4f, 10f),
         });
+
+        return lightingSystem;
     }
 }
 
-public class BoxDrawable(IVertexArrayObject vao, Texture2D? texture, BasicShader shader, IHasPosition lightSourcePos,
-    LightingContainer lightingContainer) 
-    : DrawableObject(vao, texture), IUpdatable
+public class LightingSystem
+{
+    public List<PointLight> PointLights { get; } = new();
+    public DirectionalLight DirectionalLight { get; }
+
+    public LightingSystem()
+    {
+        DirectionalLight = new DirectionalLight();
+    }
+
+    public void AddPointLight(PointLight pointLight)
+    {
+        PointLights.Add(pointLight);
+    }
+
+    public void UpdateShaderLighting(BasicShader basicShader)
+    {
+        for (int pointLightIndex = 0; pointLightIndex < PointLights.Count; pointLightIndex++)
+        {
+            var pointLight = PointLights[pointLightIndex];
+            pointLight.Apply(basicShader, $"pointLights[{pointLightIndex}]");
+        }
+
+        DirectionalLight.Apply(basicShader, "directionalLight");
+    }
+}
+
+public class LightingUpdateMeshSystem(LightingSystem lightingSystem, BasicShader basicShader, LightsourceDrawable lightSource) : IUpdatable
+{
+    public void Update(float elapsed)
+    {
+        lightingSystem.PointLights[1].Position = lightSource.Position;
+        lightingSystem.UpdateShaderLighting(basicShader);
+    }
+}
+
+public class BoxDrawable(BasicShader shader, UltimateMeshV2ProMaxUltra mesh) : IDrawable, IUpdatable
 {
     public Vector3 Position { get; set; }
 
@@ -73,19 +106,12 @@ public class BoxDrawable(IVertexArrayObject vao, Texture2D? texture, BasicShader
     {
     }
 
-    public override void Draw()
+    public void Draw()
     {
         shader.Use();
         shader.Model.SetValue(Matrix4.CreateTranslation(Position));
-
-        var dirLight = lightingContainer.DirectionalLights.First();
-        dirLight.Apply(shader, "directionalLight");
-
-        var pointLight = lightingContainer.PointLights.First();
-
-        pointLight.Position = lightSourcePos.Position;
-        pointLight.Apply(shader, "light");
-
-        DrawInternal();
+        GL.ActiveTexture(TextureUnit.Texture0);
+        GL.BindTexture(TextureTarget.Texture2D, mesh.Textures[0].Id);
+        mesh.Draw();
     }
 }
