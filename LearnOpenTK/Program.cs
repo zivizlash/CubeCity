@@ -1,7 +1,10 @@
 ﻿using LearnOpenTK.Components;
 using LearnOpenTK.Mesh;
+using LearnOpenTK.Providers;
 using LearnOpenTK.ShaderUniforms;
+using LearnOpenTK.Systems;
 using LearnOpenTK.Worlds;
+using Leopotam.EcsLite;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
@@ -15,12 +18,32 @@ public class Game : GameWindow
         new NativeWindowSettings { ClientSize = (width, height), Title = title })
     {
         _shaders = new Shaders();
-        (_world, _camera) = new WorldFactory().Create(this, _shaders);
+         // (_world, _camera) = new WorldFactory().Create(this, _shaders);
+
+        _camera = new Camera(this);
+
+        _timeProvider = new ManualTimeProvider();
+        _ecsWorld = new EcsWorld();
+
+        _updateSystems = new EcsSystems(_ecsWorld)
+            .Add(new LoadEntitiesSystem(_ecsWorld, _camera))
+            .Add(new CameraUpdateSystem(_camera, _timeProvider))
+            .Add(new LightSourcePositionUpdateSystem(_ecsWorld, _shaders, _camera,_timeProvider));
+        _updateSystems.Init();
+
+        _drawSystems = new EcsSystems(_ecsWorld)
+            .Add(new DrawSystem(_ecsWorld, _shaders, _camera));
+        _drawSystems.Init();
     }
 
     private readonly Shaders _shaders;
-    private readonly World _world;
+    // private readonly World _world;
     private readonly Camera _camera;
+
+    private readonly ManualTimeProvider _timeProvider;
+    private readonly EcsWorld _ecsWorld;
+    private readonly IEcsSystems _updateSystems;
+    private readonly IEcsSystems _drawSystems;
 
     protected override void OnFramebufferResize(FramebufferResizeEventArgs e)
     {
@@ -44,17 +67,22 @@ public class Game : GameWindow
             return;
         }
 
+        _timeProvider.AddAndUpdateElapsed((float)args.Time);
+        _updateSystems.Run();
+
         GL.ClearColor(0.3f, 0.3f, 0.44f, 1);
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-        _world.Update((float)args.Time);
+        _drawSystems.Run();
 
-        _shaders.Basic.Use();
-        _shaders.Basic.Transform.SetValue(_camera.ProjectionViewMatrix);
-        _shaders.Lightsource.Use();
-        _shaders.Lightsource.Transform.SetValue(_camera.ProjectionViewMatrix);
+        //_world.Update((float)args.Time);
 
-        _world.Draw();
+        //_shaders.Basic.Use();
+        //_shaders.Basic.Transform.SetValue(_camera.ProjectionViewMatrix);
+        //_shaders.Lightsource.Use();
+        //_shaders.Lightsource.Transform.SetValue(_camera.ProjectionViewMatrix);
+
+        //_world.Draw();
 
         SwapBuffers();
     }

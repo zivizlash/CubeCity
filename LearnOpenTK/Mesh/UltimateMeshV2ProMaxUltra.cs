@@ -41,19 +41,22 @@ public class UltimateMeshV2ProMaxUltra
     public void Draw()
     {
         GL.BindVertexArray(_vao);
-/*
-        int diffuseTextureNumber = 0;
-
-        for (int i = 0; i < Textures.Length; i++)
-        {
-            GL.ActiveTexture(TextureUnit.Texture0 + i);
-            var texture = Textures[i];
-            GL.Uniform1(shader.GetUniform("material.texture_diffuse" + diffuseTextureNumber++), i);
-            GL.BindTexture(TextureTarget.Texture2D, texture.Id);
-        }
-
         GL.ActiveTexture(TextureUnit.Texture0);
-*/
+        GL.BindTexture(TextureTarget.Texture2D, Textures[0].Id);
+
+        /*
+                int diffuseTextureNumber = 0;
+
+                for (int i = 0; i < Textures.Length; i++)
+                {
+                    GL.ActiveTexture(TextureUnit.Texture0 + i);
+                    var texture = Textures[i];
+                    GL.Uniform1(shader.GetUniform("material.texture_diffuse" + diffuseTextureNumber++), i);
+                    GL.BindTexture(TextureTarget.Texture2D, texture.Id);
+                }
+
+                GL.ActiveTexture(TextureUnit.Texture0);
+        */
 
         if (Indices is not null)
         {
