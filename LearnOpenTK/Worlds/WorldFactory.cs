@@ -11,7 +11,7 @@ public class LightsourceFactory
 {
     public LightsourceDrawable Create(Shaders shaders)
     {
-        var vao = new VertexArrayObject(VerticesData.GetRawVertices(), null);
+        var vao = new VertexArrayObject(VerticesCubeData.GetRawVertices(), null);
 
         return new LightsourceDrawable(vao, shaders.Lightsource)
         { 

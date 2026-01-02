@@ -94,7 +94,7 @@ internal class Program
     {
         Enumerable.Repeat("я люблю майнкрафт", 3).ToList().ForEach(Console.WriteLine);
 
-        foreach (var items in VerticesData.GetTextureNormalsVertices().Chunk(3 + 3 + 2))
+        foreach (var items in VerticesCubeData.GetTextureNormalsVertices().Chunk(3 + 3 + 2))
         {
             Console.WriteLine(string.Join("; \t", items.Select(f => f.ToString("+0.0;-0.0;0.0"))));
         }

@@ -17,7 +17,7 @@ public static class BoxFactory
 
     public static UltimateMeshV2ProMaxUltra CreateMesh(Camera camera)
     {
-        var vertices = VerticesData.GetTextureNormalsVertices2();
+        var vertices = VerticesCubeData.GetTextureNormalsVertices2();
 
         var texture = new Texture
         {
